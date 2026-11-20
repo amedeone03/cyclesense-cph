@@ -1,0 +1,31 @@
+study_area:
+  place_name: "Copenhagen, Denmark"   # Replace with a small, verified boundary for first pilot
+  graph_type: "bike"
+  graph_snapshot_date: null
+
+simulation:
+  random_seed: 42
+  calibration_routes: 500
+  held_out_routes: 250
+  scenarios:
+    - uniform
+    - commuter_proxy
+    - alternative_route
+
+placement:
+  counter_budgets: [5, 10, 20]
+  candidate_rule: "eligible_physical_edge"
+  compare:
+    - random
+    - geographical_kmeans
+    - route_frequency
+    - greedy
+    - community_aware_greedy
+
+similarity:
+  signature_size: 128
+  approximate_jaccard_threshold: 0.5
+
+notes: >
+  Parameters are working assumptions for feasibility tests, not empirically validated choices.
+  Do not treat scenario weights as actual bicycle traffic.

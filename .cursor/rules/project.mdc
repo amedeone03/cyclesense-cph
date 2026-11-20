@@ -1,0 +1,12 @@
+---
+description: CycleSense CPH coding and research guardrails
+alwaysApply: true
+---
+
+Follow `AGENTS.md`, `README.md`, and `docs/research_plan.md`.
+Keep modeled cycling routes distinct from observed real bicycle trips.
+Represent counters as eligible street segments; test detection through route–edge incidence.
+Prefer a small reproducible pilot before large all-pairs or citywide computation.
+Preserve training/evaluation scenario separation and random seeds.
+Write unit tests for exact similarity, placement objectives, and new candidate/graph operations.
+Never invent experimental findings or treat scenario-generated trip weights as measured flows.

@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.egg-info/
+build/
+dist/
+coverage.xml
+.coverage
+htmlcov/
+
+# Data, cache, and experimental outputs should remain local.
+/data/
+/outputs/
+/artifacts/
+/cache/
