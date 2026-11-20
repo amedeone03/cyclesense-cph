@@ -23,10 +23,14 @@ analysis = [
   "matplotlib>=3.8",
   "geopandas>=0.14",
   "jupyterlab>=4.0",
+  "pyyaml>=6",
+  "osmium>=4",
+  "folium>=0.16",
 ]
 dev = [
   "pytest>=8.0",
   "ruff>=0.8",
+  "networkx>=3.2",
 ]
 
 [tool.setuptools.packages.find]

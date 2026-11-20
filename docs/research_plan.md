@@ -56,7 +56,7 @@ Synthetic routes are not measured trips. Route-overlap communities may reflect g
 ## Milestones
 
 1. Repository setup and synthetic unit tests.
-2. Small Copenhagen graph and two or more plausible routing scenarios.
+2. Small Copenhagen graph and two or more plausible routing scenarios. The M1 pilot rectangle, physical-edge rule, and the uniform / commuter-proxy samplers are specified in `docs/m1_assumptions.md`. Alternative-route generation is deferred.
 3. Strong baseline performance, defined metric and held-out validation.
 4. LSH route-similarity graph, Louvain, and community-aware placement.
 5. Scenario-shift, computation, visualization, and concise DTU submission notebook.

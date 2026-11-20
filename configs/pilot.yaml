@@ -1,20 +1,48 @@
 study_area:
-  place_name: "Copenhagen, Denmark"   # Replace with a small, verified boundary for first pilot
-  graph_type: "bike"
+  name: central_copenhagen_indre_by_pilot
+  place_label: "Indre By core, Copenhagen, Denmark"
+  boundary_type: bbox
+  crs: EPSG:4326
+  # Exact study rectangle in WGS84. This is the boundary, not a geocoder result.
+  west: 12.5630
+  south: 55.6705
+  east: 12.5965
+  north: 55.6880
+  graph_type: bike
+  simplify: true
+  retain_all: true
+  truncate_by_edge: false
+  preserve_oneway: true
   graph_snapshot_date: null
 
 simulation:
   random_seed: 42
+  evaluation_seed_offset: 10007
   calibration_routes: 500
   held_out_routes: 250
+  min_od_distance_m: 400
+  max_od_distance_m: 2500
+  min_eligible_edges: 3
+  max_attempts_factor: 80
   scenarios:
     - uniform
     - commuter_proxy
+  commuter_proxy:
+    anchor_name: Rådhuspladsen
+    anchor_lat: 55.6761
+    anchor_lon: 12.5689
+    distance_floor_m: 50
+  deferred_scenarios:
     - alternative_route
+
+candidates:
+  rule: eligible_physical_edge
+  min_length_m: 15
+  bidirectional_counting: true
 
 placement:
   counter_budgets: [5, 10, 20]
-  candidate_rule: "eligible_physical_edge"
+  candidate_rule: eligible_physical_edge
   compare:
     - random
     - geographical_kmeans
@@ -27,5 +55,7 @@ similarity:
   approximate_jaccard_threshold: 0.5
 
 notes: >
-  Parameters are working assumptions for feasibility tests, not empirically validated choices.
-  Do not treat scenario weights as actual bicycle traffic.
+  M1 pilot parameters. The rectangle above is the exact study boundary.
+  Uniform and commuter-proxy draws are simulated routes, not bicycle counts.
+  Placement and similarity settings are reserved for later milestones and are
+  not executed by scripts/run_m1.py. alternative_route is deferred.
