@@ -25,7 +25,7 @@ The project is a **simulation-based methods study**. OpenStreetMap geometry is r
 6. Place counters with geographical K-Means, route-frequency, plain greedy maximum coverage, and community-aware greedy.
 7. Evaluate on **held-out synthetic routes** and different assumptions; compare coverage, per-community representation, robustness, time, and RAM.
 
-**Current implementation state:** exact weighted route-coverage / greedy baseline, plus an M1 pilot that downloads a small central-Copenhagen bike graph, defines physical counter segments, and generates uniform and commuter-proxy routes. LSH, Louvain, and placement experiments are **not implemented yet**. Modeled routes are not observed trips.
+**Current implementation state:** M1 pilot graph and simulated routes, plus M2 random, geographic K-Means, route-frequency, and greedy placement on those routes. LSH, Louvain, and community-aware placement are not implemented yet. Modeled routes are not observed trips.
 
 ## Project structure
 
@@ -43,6 +43,7 @@ cyclesense-cph/
 ├── scripts/download_graph.py    # Optional Overpass download; skips a saved M1 graph
 ├── scripts/run_m1.py            # Pilot graph, candidates, and routes
 ├── scripts/map_m1.py            # Interactive map of the saved M1 network
+├── scripts/run_m2.py            # Placement baselines on the saved M1 routes
 ├── src/cyclesense/
 │   ├── coverage.py              # Exact coverage + greedy baseline
 │   ├── similarity.py            # Exact Jaccard baseline
@@ -104,11 +105,19 @@ python scripts/map_m1.py --serve
 
 `python scripts/map_m1.py --serve` rebuilds the default map and opens it at <http://127.0.0.1:8765/m1_network.html>. The page does not request `tile.openstreetmap.org`. Geometry is attributed to OpenStreetMap contributors under the ODbL.
 
+M2 places counters on the saved M1 candidates. It reads calibration routes only, then scores the held-out routes. It does not regenerate routes.
+
+```bash
+python scripts/run_m2.py
+```
+
+The protocol is `docs/m2_baselines.md`. Figures and the K=10 placement map are written under `outputs/m2/`.
+
 ## Milestones
 
 - [ ] **M0**: GitHub repository, Cursor workspace and passing local tests
 - [x] **M1**: Copenhagen subgraph extraction, topology audit, candidate sites, test routes
-- [ ] **M2**: Random/K-Means/route-frequency/greedy baselines and held-out evaluation
+- [x] **M2**: Random/K-Means/route-frequency/greedy baselines and held-out evaluation
 - [ ] **M3**: MinHash–LSH similarity graph and Louvain route communities
 - [ ] **M4**: Community-aware placement, scenario-shift robustness, scalability plots
 - [ ] **M5**: DTU notebook and concise report, limitations and reproducible runs

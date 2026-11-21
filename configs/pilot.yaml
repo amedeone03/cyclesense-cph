@@ -41,13 +41,17 @@ candidates:
   bidirectional_counting: true
 
 placement:
-  counter_budgets: [5, 10, 20]
+  counter_budgets: [5, 10, 20, 30]
+  stochastic_seeds: [42, 43, 44, 45, 46]
+  map_budget: 10
+  map_seed: 42
   candidate_rule: eligible_physical_edge
-  compare:
+  methods:
     - random
     - geographical_kmeans
     - route_frequency
     - greedy
+  deferred:
     - community_aware_greedy
 
 similarity:
@@ -57,5 +61,6 @@ similarity:
 notes: >
   M1 pilot parameters. The rectangle above is the exact study boundary.
   Uniform and commuter-proxy draws are simulated routes, not bicycle counts.
-  Placement and similarity settings are reserved for later milestones and are
-  not executed by scripts/run_m1.py. alternative_route is deferred.
+  scripts/run_m1.py does not place counters. scripts/run_m2.py reads the
+  placement budgets and seeds above and does not change route generation.
+  community_aware_greedy and alternative_route stay deferred.
