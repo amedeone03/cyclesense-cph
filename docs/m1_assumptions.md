@@ -129,7 +129,7 @@ Uncheck Geographical basemap for the tile-free network on that same page. `pytho
 - Candidate filters will reject real cycle tracks that are tagged as footways, and they can accept a primary carriageway that cyclists do not use.
 - The commuter proxy will look like "trips to the centre" because that is how the kernel is defined. That pattern is not evidence of commuting.
 - Duplicate corridors inside one split are kept, because the sampler hit them more than once. They still have weight 1 each. Do not read the resulting edge frequencies as volumes.
-- No municipal counter file is matched. No ground-truth trip exists in this repository.
+- This M1 run does not match a municipal counter file and does not contain a ground-truth trip. A separate check in `docs/standout_extension.md` can compare published bicycle counts with these saved routes. It does not rewrite the files above.
 - M2 placement, MinHash/LSH, and Louvain are not part of this run.
 
 ## Extraction record

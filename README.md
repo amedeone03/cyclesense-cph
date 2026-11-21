@@ -104,6 +104,10 @@ python scripts/map_m1.py --serve
 
 `python scripts/map_m1.py --serve` rebuilds the default map and opens it at <http://127.0.0.1:8765/m1_network.html>. The page does not request `tile.openstreetmap.org`. Geometry is attributed to OpenStreetMap contributors under the ODbL.
 
+## External count check
+
+`scripts/run_external_validation.py` compares the saved M1 routes with Københavns Kommune's published bicycle counts (CC0 Trafiktal file). It asks two questions: whether simulated corridor frequency ranks like observed bicycle AADT at name-matched counting sites, and how much extra held-out modeled-route coverage K additional greedy sites add beyond those sites. The method, the data limits, and the executed numbers are in `docs/standout_extension.md`. Run `python scripts/run_m1.py` first. The municipal CSV and the figures stay under gitignored `data/` and `outputs/`.
+
 ## Milestones
 
 - [ ] **M0**: GitHub repository, Cursor workspace and passing local tests
