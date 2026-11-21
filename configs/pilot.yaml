@@ -57,10 +57,45 @@ placement:
 similarity:
   signature_size: 128
   approximate_jaccard_threshold: 0.5
+  graph_thresholds: [0.3, 0.4, 0.5, 0.6, 0.7]
+  retrieval_thresholds: [0.3, 0.5, 0.7]
+  louvain_seeds: [42, 43, 44, 45, 46]
+  louvain_resolution: 1
+  assignment_rule: neighbor_consensus
+  scalability_sizes: [100, 250, 500, 1000, 2000]
+  scalability_seed: 24242
+  scalability_scenario: uniform
+
+optimization:
+  lambdas: [0, 0.1, 0.25, 0.5, 0.75]
+  community_thresholds: [0.5, 0.3]
+  primary_threshold: 0.5
+  louvain_seed: 42
+  shuffle_seeds: [42, 43, 44]
+  large_community_min_size: 2
+  map_budget: 10
+  map_lambda: 0.25
+
+validation:
+  shuffle_seed_start: 0
+  n_shuffle_seeds: 30
+  comparison_lambdas: [0.1, 0.25, 0.5, 0.75]
+  evaluation_seed_start: 81000
+  n_evaluation_samples: 20
+  evaluation_routes: 250
+  scalability_sizes: [500, 1000, 2000]
+  scalability_seed: 24242
+  lsh_num_perm: 32
+  lsh_bands: 16
+  lsh_rows: 2
+  jaccard_threshold: 0.5
 
 notes: >
   M1 pilot parameters. The rectangle above is the exact study boundary.
   Uniform and commuter-proxy draws are simulated routes, not bicycle counts.
   scripts/run_m1.py does not place counters. scripts/run_m2.py reads the
   placement budgets and seeds above and does not change route generation.
-  community_aware_greedy and alternative_route stay deferred.
+  scripts/run_m3.py reads the similarity settings and does not place counters.
+  scripts/run_m4.py reads the optimization settings. map_lambda is fixed at
+  0.25 before any held-out comparison. scripts/run_m5.py reads the validation
+  settings and does not refit placements. alternative_route stays deferred.

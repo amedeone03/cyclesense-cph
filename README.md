@@ -25,7 +25,7 @@ The project is a **simulation-based methods study**. OpenStreetMap geometry is r
 6. Place counters with geographical K-Means, route-frequency, plain greedy maximum coverage, and community-aware greedy.
 7. Evaluate on **held-out synthetic routes** and different assumptions; compare coverage, per-community representation, robustness, time, and RAM.
 
-**Current implementation state:** M1 pilot graph and simulated routes, plus M2 random, geographic K-Means, route-frequency, and greedy placement on those routes. LSH, Louvain, and community-aware placement are not implemented yet. Modeled routes are not observed trips.
+**Current implementation state:** M1 through M4 are implemented, and M5 checks those results with a 30-seed shuffle, new simulated evaluation samples, and a matched exact-versus-LSH timing. Modeled routes are not observed trips.
 
 ## Project structure
 
@@ -38,12 +38,17 @@ cyclesense-cph/
 │   ├── research_plan.md         # Hypotheses and evaluation protocol
 │   ├── data_sources.md          # Provenance / limitations
 │   ├── m1_assumptions.md        # M1 boundary, candidates, route rules
+│   ├── m4_optimization.md       # Community-balanced placement protocol and results
+│   ├── m5_final_validation.md   # Shuffle, new-sample, and LSH validation record
 │   └── research_proposal.pdf    # Updated working proposal
 ├── notebooks/analysis.ipynb     # Reporting notebook starter
 ├── scripts/download_graph.py    # Optional Overpass download; skips a saved M1 graph
 ├── scripts/run_m1.py            # Pilot graph, candidates, and routes
 ├── scripts/map_m1.py            # Interactive map of the saved M1 network
 ├── scripts/run_m2.py            # Placement baselines on the saved M1 routes
+├── scripts/run_m3.py            # Route similarity, LSH, and Louvain communities
+├── scripts/run_m4.py            # Community-balanced greedy on the saved routes
+├── scripts/run_m5.py            # Final validation of the saved placements
 ├── src/cyclesense/
 │   ├── coverage.py              # Exact coverage + greedy baseline
 │   ├── similarity.py            # Exact Jaccard baseline
@@ -113,14 +118,38 @@ python scripts/run_m2.py
 
 The protocol is `docs/m2_baselines.md`. Figures and the K=10 placement map are written under `outputs/m2/`.
 
+M3 compares calibration routes with exact Jaccard, MinHash/LSH, and Louvain. It does not place counters.
+
+```bash
+python scripts/run_m3.py
+```
+
+The protocol and the measured record are in `docs/m3_communities.md`. Figures and the community map are written under `outputs/m3/`.
+
+M4 reuses that greedy selector with calibration community weights. Lambda 0 matches the saved M2 greedy placements. It does not regenerate routes.
+
+```bash
+python scripts/run_m4.py
+```
+
+The protocol and the measured record are in `docs/m4_optimization.md`. Figures and the K=10 comparison map are written under `outputs/m4/`.
+
+M5 does not move the counters. It repeats the shuffle with 30 seeds, scores the saved placements on new simulated samples, and times exact Jaccard against verified MinHash/LSH.
+
+```bash
+python scripts/run_m5.py
+```
+
+The record is `docs/m5_final_validation.md`. Figures and tables are written under `outputs/m5/`.
+
 ## Milestones
 
 - [ ] **M0**: GitHub repository, Cursor workspace and passing local tests
 - [x] **M1**: Copenhagen subgraph extraction, topology audit, candidate sites, test routes
 - [x] **M2**: Random/K-Means/route-frequency/greedy baselines and held-out evaluation
-- [ ] **M3**: MinHash–LSH similarity graph and Louvain route communities
-- [ ] **M4**: Community-aware placement, scenario-shift robustness, scalability plots
-- [ ] **M5**: DTU notebook and concise report, limitations and reproducible runs
+- [x] **M3**: MinHash–LSH similarity graph and Louvain route communities
+- [x] **M4**: Community-balanced placement, scenario-shift check, and shuffled-label ablation
+- [x] **M5**: Final validation of the saved placements, without the graded report
 
 ## Data management
 
