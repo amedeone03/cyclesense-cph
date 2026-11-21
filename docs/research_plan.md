@@ -58,5 +58,5 @@ Synthetic routes are not measured trips. Route-overlap communities may reflect g
 1. Repository setup and synthetic unit tests.
 2. Small Copenhagen graph and two or more plausible routing scenarios. The M1 pilot rectangle, physical-edge rule, and the uniform / commuter-proxy samplers are specified in `docs/m1_assumptions.md`. Alternative-route generation is deferred.
 3. Strong baseline performance, defined metric and held-out validation. The M2 protocol is `docs/m2_baselines.md`. MinHash, LSH, and Louvain stay out of that run.
-4. LSH route-similarity graph, Louvain, and community-aware placement.
-5. Scenario-shift, computation, visualization, and concise DTU submission notebook.
+4. LSH route-similarity graph, Louvain, and community-aware placement. The similarity graph and Louvain record is `docs/m3_communities.md`. The community-balanced placement record is `docs/m4_optimization.md`.
+5. Scenario-shift, computation, and visualization. The validation record is `docs/m5_final_validation.md`. The graded notebook is not part of that run.
