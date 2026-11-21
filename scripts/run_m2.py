@@ -3,9 +3,12 @@
 From the repository root, with the analysis extra installed:
 
     python scripts/run_m2.py
+    python scripts/run_m2.py --map-only
 
 Selection uses each scenario's calibration routes. Held-out routes are scored
 after the counters are chosen. The script does not regenerate routes.
+``--map-only`` rewrites the placement HTML from ``outputs/m2/selected_k10.csv``
+and does not recompute coverage.
 
 Outputs are written under outputs/m2/. Modeled-route coverage is not an
 observed bicycle count.
@@ -351,5 +354,63 @@ def main() -> None:
     print("M2 acceptance checks passed.", flush=True)
 
 
+def rebuild_placement_map() -> Path:
+    """Rewrite the K=10 HTML from the saved counter list.
+
+    This does not select counters again and does not rewrite the result tables.
+    """
+    paths = validated_m1_artifacts(ROOT)
+    if paths is None:
+        raise SystemExit("No validated M1 artifacts. Run python scripts/run_m1.py first.")
+    selected_path = ROOT / "outputs" / "m2" / "selected_k10.csv"
+    if not selected_path.is_file():
+        raise SystemExit("No outputs/m2/selected_k10.csv. Run python scripts/run_m2.py first.")
+    config = yaml.safe_load((ROOT / "configs" / "pilot.yaml").read_text(encoding="utf-8"))
+    budget = int(config["placement"].get("map_budget", 10))
+    metadata = json.loads(paths["metadata"].read_text(encoding="utf-8"))
+    box = metadata["boundary"]
+    boundary = (float(box["west"]), float(box["south"]), float(box["east"]), float(box["north"]))
+    selections: list[dict[str, Any]] = []
+    grouped: dict[tuple[str, str, str], dict[str, Any]] = {}
+    with selected_path.open(encoding="utf-8") as handle:
+        for row in csv.DictReader(handle):
+            key = (row["scenario"], row["method"], row["seed"])
+            selection = grouped.get(key)
+            if selection is None:
+                seed = None if row["seed"] == "" else int(row["seed"])
+                selection = {
+                    "method": row["method"],
+                    "scenario": row["scenario"],
+                    "seed": seed,
+                    "sites": [],
+                }
+                grouped[key] = selection
+                selections.append(selection)
+            selection["sites"].append(
+                {
+                    "edge_id": row["physical_edge_id"],
+                    "lon": float(row["lon"]),
+                    "lat": float(row["lat"]),
+                    "name": row["name"],
+                    "highway": row["highway"],
+                }
+            )
+    pbf = Path(str(metadata.get("pbf_path") or ROOT / "cache" / "osm" / "Copenhagen.osm.pbf"))
+    if not pbf.is_file():
+        pbf = ROOT / "cache" / "osm" / "Copenhagen.osm.pbf"
+    basemap = load_context_basemap(pbf, boundary, paths["summary"].parent / "context_basemap.json")
+    return write_placement_map(
+        selections,
+        ROOT / "outputs" / "m2" / "placements_k10.html",
+        boundary=boundary,
+        basemap=basemap,
+        budget=budget,
+    )
+
+
 if __name__ == "__main__":
-    main()
+    if "--map-only" in sys.argv:
+        written = rebuild_placement_map()
+        print(f"Wrote {written.relative_to(ROOT)}", flush=True)
+    else:
+        main()

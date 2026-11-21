@@ -55,7 +55,7 @@ Greedy calls the existing `greedy_max_coverage`. That function stops when every 
 - `outputs/m2/selected_k10.csv`
 - `outputs/m2/summary.json`
 
-The map uses K = 10. Stochastic layers use seed 42. Each algorithm and scenario is its own layer on the M1 geographical basemap. A marker popup shows the algorithm name and `physical_edge_id`. The page does not request public map tiles.
+The map uses K = 10. Stochastic layers use seed 42. Each algorithm and scenario is its own layer on the M1 geographical basemap. The page opens with Greedy on the uniform scenario. The other layers stay in the layer control. Street names appear when the pointer is over a named street or a selected counter. A marker popup shows the algorithm name, the street name, and `physical_edge_id`. The page does not request public map tiles. `python scripts/run_m2.py --map-only` rewrites this HTML from `outputs/m2/selected_k10.csv` and leaves the result tables unchanged.
 
 ## Saturation reading
 

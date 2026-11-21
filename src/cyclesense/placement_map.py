@@ -1,7 +1,8 @@
 """Interactive map of M2 counter sets on the saved M1 basemap.
 
-One layer per algorithm. Markers are modeled counter sites for a single
-budget and, for stochastic methods, a single documented seed.
+One layer per algorithm and scenario. The default view shows greedy
+placement on the uniform scenario. Other layers stay in the control.
+Street names are hover text on named streets, not permanent labels.
 """
 
 import html
@@ -10,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from cyclesense.interactive import _add_basemap
-from cyclesense.placement import METHOD_LABELS
+from cyclesense.placement import METHOD_LABELS, METHODS
 
 _COLORS = {
     "random": "#7f7f7f",
@@ -18,6 +19,39 @@ _COLORS = {
     "route_frequency": "#377eb8",
     "greedy": "#4daf4a",
 }
+
+
+def _default_layer_indexes(selections: Sequence[Mapping[str, Any]]) -> set[int]:
+    """Indexes of the greedy uniform layer, when that layer is present."""
+    uniform = [
+        index
+        for index, selection in enumerate(selections)
+        if str(selection["method"]) == "greedy" and str(selection.get("scenario") or "") == "uniform"
+    ]
+    if uniform:
+        return set(uniform)
+    greedy = [index for index, selection in enumerate(selections) if str(selection["method"]) == "greedy"]
+    if greedy:
+        return {greedy[0]}
+    return set(range(len(selections)))
+
+
+def _legend_html() -> str:
+    rows = []
+    for method in METHODS:
+        color = _COLORS[method]
+        label = html.escape(METHOD_LABELS[method])
+        rows.append(
+            "<div class='placement-legend-row'>"
+            f"<span class='placement-swatch' style='background:{color}'></span>"
+            f"{label}</div>"
+        )
+    return (
+        "<div class='placement-legend'>"
+        "<div class='placement-legend-title'>Algorithm</div>"
+        + "".join(rows)
+        + "</div>"
+    )
 
 
 def write_placement_map(
@@ -36,10 +70,11 @@ def write_placement_map(
     if not latitudes:
         raise ValueError("placement map needs at least one selected counter")
     center = [sum(latitudes) / len(latitudes), sum(longitudes) / len(longitudes)]
-    fmap = folium.Map(location=center, zoom_start=14, tiles=None, control_scale=True, zoom_control=True)
+    fmap = folium.Map(location=center, zoom_start=15, tiles=None, control_scale=True, zoom_control=True)
     if basemap:
-        _add_basemap(fmap, basemap)
-    for selection in selections:
+        _add_basemap(fmap, basemap, permanent_labels=False)
+    visible = _default_layer_indexes(selections)
+    for index, selection in enumerate(selections):
         method = str(selection["method"])
         seed = selection.get("seed")
         scenario = selection.get("scenario")
@@ -47,7 +82,7 @@ def write_placement_map(
         title = METHOD_LABELS.get(method, method)
         if scenario:
             title = f"{title} — {scenario}"
-        layer = folium.FeatureGroup(name=f"{title} (K={budget})", show=True)
+        layer = folium.FeatureGroup(name=f"{title} (K={budget})", show=index in visible)
         color = _COLORS.get(method, "#333333")
         for site in selection["sites"]:
             edge_id = str(site["edge_id"])
@@ -67,15 +102,16 @@ def write_placement_map(
                 ),
                 max_width=420,
             )
+            location = [float(site["lat"]), float(site["lon"])]
             folium.CircleMarker(
-                location=[float(site["lat"]), float(site["lon"])],
-                radius=7,
-                color=color,
-                weight=2,
+                location=location,
+                radius=14,
+                color="#ffffff",
+                weight=4,
                 fill=True,
                 fill_color=color,
-                fill_opacity=0.9,
-                tooltip=f"{METHOD_LABELS.get(method, method)}: {edge_id}",
+                fill_opacity=1,
+                tooltip=folium.Tooltip(f"{METHOD_LABELS.get(method, method)}: {name}", sticky=True),
                 popup=popup,
             ).add_to(layer)
         layer.add_to(fmap)
@@ -85,15 +121,33 @@ def write_placement_map(
         fmap.fit_bounds([[south, west], [north, east]], padding=(8, 8))
     fmap.get_root().html.add_child(
         folium.Element(
-            """
-            <div style="position: fixed; bottom: 12px; right: 12px; z-index: 9999;
-                        background: rgba(255,255,255,0.95); padding: 6px 10px;
-                        border: 1px solid #bbb; font: 12px/1.4 sans-serif; max-width: 380px;">
+            f"""
+            {_legend_html()}
+            <div class="placement-note">
               Geometry © OpenStreetMap contributors, ODbL.
               Local BBBike extract. No public map tiles.
               Markers are modeled counter sites.
+              Hover a street or a marker for its name.
             </div>
-            <style>.leaflet-container { background: #ffffff; }</style>
+            <style>
+              .leaflet-container {{ background: #ffffff; }}
+              .placement-legend {{
+                position: fixed; bottom: 54px; left: 12px; z-index: 9999;
+                background: rgba(255,255,255,0.96); padding: 8px 10px;
+                border: 1px solid #bbb; font: 12px/1.4 sans-serif;
+              }}
+              .placement-legend-title {{ font-weight: 700; margin-bottom: 4px; }}
+              .placement-legend-row {{ display: flex; align-items: center; gap: 6px; }}
+              .placement-swatch {{
+                width: 12px; height: 12px; border-radius: 50%;
+                border: 2px solid #fff; box-shadow: 0 0 0 1px #555; flex: none;
+              }}
+              .placement-note {{
+                position: fixed; bottom: 12px; right: 12px; z-index: 9999;
+                background: rgba(255,255,255,0.95); padding: 6px 10px;
+                border: 1px solid #bbb; font: 12px/1.4 sans-serif; max-width: 320px;
+              }}
+            </style>
             """
         )
     )
