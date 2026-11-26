@@ -90,6 +90,29 @@ validation:
   lsh_rows: 2
   jaccard_threshold: 0.5
 
+integrated:
+  jaccard_threshold: 0.5
+  louvain_seed: 42
+  signature_seed: 42
+  budgets: [10, 20]
+  lambdas: [0.25, 0.5]
+  # Primary bandings are the M3 calibration operating points. The other three
+  # are existing bandings chosen from calibration retrieval recall, not from
+  # held-out placement coverage.
+  primary_bandings:
+    uniform: {role: primary, num_perm: 32, bands: 16, rows: 2}
+    commuter_proxy: {role: primary, num_perm: 128, bands: 32, rows: 4}
+  comparison_bandings:
+    - {role: high_recall, num_perm: 64, bands: 32, rows: 2}
+    - {role: moderate_recall, num_perm: 64, bands: 16, rows: 4}
+    - {role: aggressive_reduction, num_perm: 32, bands: 4, rows: 8}
+  scalability_sizes: [500, 1000, 2000]
+  scalability_seed: 24242
+  scalability_scenario: uniform
+  scalability_banding: {num_perm: 32, bands: 16, rows: 2}
+  timing_repeats: 5
+  memory_repeats: 3
+
 notes: >
   M1 pilot parameters. The rectangle above is the exact study boundary.
   Uniform and commuter-proxy draws are simulated routes, not bicycle counts.
@@ -98,4 +121,6 @@ notes: >
   scripts/run_m3.py reads the similarity settings and does not place counters.
   scripts/run_m4.py reads the optimization settings. map_lambda is fixed at
   0.25 before any held-out comparison. scripts/run_m5.py reads the validation
-  settings and does not refit placements. alternative_route stays deferred.
+  settings and does not refit placements. scripts/run_integrated_study.py
+  reads the integrated settings. It does not replace the M3 exact graph.
+  alternative_route stays deferred.

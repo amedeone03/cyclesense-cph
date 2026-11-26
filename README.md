@@ -42,6 +42,7 @@ cyclesense-cph/
 │   ├── m3_communities.md        # Jaccard, MinHash/LSH, and Louvain
 │   ├── m4_optimization.md       # Community-balanced placement
 │   ├── m5_final_validation.md   # Shuffle, new-sample, and LSH validation
+│   ├── integrated_study.md      # Exact versus verified-LSH placement pipelines
 │   ├── standout_extension.md    # Municipal counts and complementary placement
 │   └── research_proposal.pdf    # Updated working proposal
 ├── notebooks/analysis.ipynb     # Reporting notebook starter
@@ -52,6 +53,7 @@ cyclesense-cph/
 ├── scripts/run_m3.py            # Route similarity, LSH, and Louvain communities
 ├── scripts/run_m4.py            # Community-balanced greedy on the saved routes
 ├── scripts/run_m5.py            # Final validation of the saved placements
+├── scripts/run_integrated_study.py  # Exact versus verified-LSH pipelines
 ├── scripts/run_external_validation.py  # Municipal counts and complementary greedy
 ├── scripts/map_standout.py      # Interactive map of the external check
 ├── src/cyclesense/
@@ -61,6 +63,7 @@ cyclesense-cph/
 │   ├── minhash.py               # MinHash + LSH
 │   ├── communities.py           # Louvain communities
 │   ├── balanced.py              # Community-balanced greedy
+│   ├── integrated.py            # Exact versus verified-LSH pipelines
 │   ├── external_validation.py   # Count matching and complementary placement
 │   ├── standout_map.py          # Folium map of the external check
 │   ├── edges.py                 # Physical segment ids and eligibility
@@ -152,6 +155,14 @@ python scripts/run_m5.py
 ```
 
 The record is `docs/m5_final_validation.md`. Figures and tables are written under `outputs/m5/`.
+
+The integrated study asks whether verified MinHash/LSH can replace all-pairs Jaccard inside the Louvain and balanced-greedy pipeline. M3 still builds its published communities from exact Jaccard. This run does not rewrite those files.
+
+```bash
+python scripts/run_integrated_study.py
+```
+
+The record is `docs/integrated_study.md`. Figures and tables are written under `outputs/integrated/`.
 
 ## External count check
 
