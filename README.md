@@ -25,7 +25,7 @@ The project is a **simulation-based methods study**. OpenStreetMap geometry is r
 6. Place counters with geographical K-Means, route-frequency, plain greedy maximum coverage, and community-aware greedy.
 7. Evaluate on **held-out synthetic routes** and different assumptions; compare coverage, per-community representation, robustness, time, and RAM.
 
-**Current implementation state:** M1 through M5 are implemented. M5 checks those results with a 30-seed shuffle, new simulated evaluation samples, and a matched exact-versus-LSH timing. M5.6 keeps the saved OD pairs and counter sites fixed and rescores them on simulated detours. A separate external check compares the saved routes with published municipal bicycle counts. Modeled routes are not observed trips.
+**Current implementation state:** M1 through M5 are implemented. M5 checks those results with a 30-seed shuffle, new simulated evaluation samples, and a matched exact-versus-LSH timing. M5.6 rescores the saved placements on simulated detours. M5.7 times streaming exact and verified LSH on nested samples up to 10,000 simulated routes. A separate external check compares the saved routes with published municipal bicycle counts. Modeled routes are not observed trips.
 
 ## Project structure
 
@@ -44,6 +44,7 @@ cyclesense-cph/
 │   ├── m5_final_validation.md   # Shuffle, new-sample, and LSH validation
 │   ├── integrated_study.md      # Exact versus verified-LSH placement pipelines
 │   ├── route_choice_robustness.md  # Fixed placements on simulated detours
+│   ├── scalability_study.md     # Streaming exact and verified LSH at larger samples
 │   ├── standout_extension.md    # Municipal counts and complementary placement
 │   └── research_proposal.pdf    # Updated working proposal
 ├── notebooks/analysis.ipynb     # Reporting notebook starter
@@ -56,6 +57,7 @@ cyclesense-cph/
 ├── scripts/run_m5.py            # Final validation of the saved placements
 ├── scripts/run_integrated_study.py  # Exact versus verified-LSH pipelines
 ├── scripts/run_route_choice_study.py  # Fixed placements on simulated detours
+├── scripts/run_scalability_study.py  # Larger nested samples, exact and LSH
 ├── scripts/run_external_validation.py  # Municipal counts and complementary greedy
 ├── scripts/map_standout.py      # Interactive map of the external check
 ├── src/cyclesense/
@@ -67,6 +69,7 @@ cyclesense-cph/
 │   ├── balanced.py              # Community-balanced greedy
 │   ├── integrated.py            # Exact versus verified-LSH pipelines
 │   ├── route_choice.py          # Perturbed shortest paths and detour checks
+│   ├── scalability.py           # Nested-sample timing, memory, and recall checks
 │   ├── external_validation.py   # Count matching and complementary placement
 │   ├── standout_map.py          # Folium map of the external check
 │   ├── edges.py                 # Physical segment ids and eligibility
@@ -175,6 +178,14 @@ python scripts/run_route_choice_study.py
 
 The record is `docs/route_choice_robustness.md`. Figures and tables are written under `outputs/route_choice/`.
 
+M5.7 times streaming exact and verified LSH on nested uniform samples of 500, 1,000, 2,000, 5,000, and 10,000 simulated routes. Route generation is excluded from the pipeline times. The run does not overwrite the M1 routes or the integrated-study benchmarks.
+
+```bash
+python scripts/run_scalability_study.py
+```
+
+The record is `docs/scalability_study.md`. Figures and tables are written under `outputs/scalability/`.
+
 ## External count check
 
 `scripts/run_external_validation.py` compares the saved M1 routes with Københavns Kommune's published bicycle counts (CC0 Trafiktal file). It asks two questions: whether simulated corridor frequency ranks like observed bicycle AADT at name-matched counting sites, and how much extra held-out modeled-route coverage K additional greedy sites add beyond those sites. Those locations are a recurring counting programme, not a confirmed inventory of permanently installed sensors. Modeled-route coverage is not observed cyclist capture.
@@ -211,10 +222,11 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - Published municipal counts do not rank like simulated corridor frequency at the 26 name-matched sites. The counts also show where the simulated routes miss a busy bridge.
 - Five greedy segments added beyond those 26 sites raise held-out modeled-route coverage by about ten percentage points in both scenarios.
 - With the OD pairs and counter IDs held fixed, short simulated detours lower K = 10 coverage by about 7–8 percentage points in the uniform scenario and about 3–4 in the commuter scenario. At K = 20 the drop is about 4–5 points. Greedy usually stays ahead of the lambda-0.25 placement. The wider 30% cap adds little beyond the 15% cap, because most accepted detours are already shorter than 15%.
+- On a nested uniform sample, verified LSH with 32 permutations and 16×2 bands keeps about 99.6% of the exact Jaccard edges from 500 to 10,000 routes and is about eight times faster than streaming exact at 10,000 routes. Streaming exact uses less Python-tracked memory at every size. The ten selected counters still change as the sample grows.
 
 ## Limitations
 
-- Simulated routes are generated shortest paths, not observed journeys. The M5.6 detours are another simulation, not estimated rider choices.
+- Simulated routes are generated shortest paths, not observed journeys. The M5.6 detours are another simulation, not estimated rider choices. Ten thousand simulated routes on this network still reuse about 1,600 physical segments.
 - Modeled-route coverage is not the share of cyclists a counter would record.
 - Municipal counting locations are a recurring count programme, not a confirmed list of permanent sensors.
 - Proposed segments are model selections, not approved installation sites.
@@ -231,6 +243,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - [x] **M4**: Community-balanced placement, scenario-shift check, and shuffled-label ablation
 - [x] **M5**: Final validation of the saved placements, without the graded report
 - [x] **M5.6**: Route-choice sensitivity of the saved placements, without the graded report
+- [x] **M5.7**: Scalability of streaming exact and verified LSH on larger simulated samples, without the graded report
 
 ## Data management
 
@@ -239,4 +252,4 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - Use distinct training/calibration and evaluation route samples.
 - Do not report synthetic demand assumptions as observed Copenhagen cycling patterns.
 
-See `docs/research_plan.md` for the intended experiments. M1 through M5 and the M5.6 route-choice check are implemented. The external count check is an additional comparison against published municipal bicycle AADT. It does not replace the simulated-route results.
+See `docs/research_plan.md` for the intended experiments. M1 through M5, the M5.6 route-choice check, and the M5.7 scalability study are implemented. The external count check is an additional comparison against published municipal bicycle AADT. It does not replace the simulated-route results.

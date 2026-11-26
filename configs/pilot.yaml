@@ -124,6 +124,40 @@ route_choice:
   balanced_lambda: 0.25
   placement_threshold: 0.5
 
+# M5.7 scalability. Seeds and bandings were fixed before this run.
+# The primary banding is the earlier uniform calibration choice, 32×16×2.
+# It is remeasured here; its recall is not assumed to carry over.
+scalability_study:
+  scenario: uniform
+  seed: 73000
+  evaluation_seed: 73001
+  evaluation_routes: 250
+  sizes: [500, 1000, 2000, 5000, 10000]
+  jaccard_threshold: 0.5
+  louvain_seed: 42
+  signature_seed: 42
+  budget_k: 10
+  lambda: 0.25
+  primary_banding: {method: verified_lsh, num_perm: 32, bands: 16, rows: 2}
+  comparison_bandings:
+    - {method: lsh_64_32x2, num_perm: 64, bands: 32, rows: 2}
+    - {method: lsh_64_16x4, num_perm: 64, bands: 16, rows: 4}
+    - {method: lsh_128_32x4, num_perm: 128, bands: 32, rows: 4}
+  timing_repeats: {500: 5, 1000: 5, 2000: 5, 5000: 3, 10000: 3}
+  memory_repeats: {500: 3, 1000: 3, 2000: 3, 5000: 2, 10000: 1}
+  streaming_exact_through: 2000
+  streaming_probe_sizes: [5000]
+  streaming_probe_budget_seconds: 120
+  streaming_extend_if_median_seconds_below: 60
+  streaming_extend_if_edges_below: 250000
+  streaming_extended_timing_repeats: 1
+  streaming_extended_memory_repeats: 1
+  repeat_budget_seconds: 180
+  max_candidate_pairs: 8000000
+  max_bucket_size: 12000
+  subset_recall_routes: 400
+  subset_recall_seed: 73007
+
 notes: >
   M1 pilot parameters. The rectangle above is the exact study boundary.
   Uniform and commuter-proxy draws are simulated routes, not bicycle counts.
@@ -137,3 +171,5 @@ notes: >
   alternative_route stays deferred for route generation in M1.
   scripts/run_route_choice_study.py reads route_choice and does not refit
   placements or redraw the saved OD pairs.
+  scripts/run_scalability_study.py reads scalability_study. It does not
+  overwrite the M1 routes or the integrated-study benchmarks.
