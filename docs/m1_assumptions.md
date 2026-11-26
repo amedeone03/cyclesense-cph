@@ -76,7 +76,7 @@ Euclidean distance is computed in the UTM metres of the projected graph. Pairs c
 
 `commuter_proxy` is not a home-to-work matrix. It does not use population, jobs, or education counts. It only moves more simulated destinations toward the documented anchor and more origins toward the edge of this small rectangle. The anchor is snapped to the nearest routing node for the audit; the weights use the projected anchor coordinates.
 
-`alternative_route` (bounded detours) is listed under `deferred_scenarios` and is not generated.
+`alternative_route` (bounded detours) is listed under `deferred_scenarios` and is not generated. M5.6 later perturbs routing costs on these saved evaluation OD pairs. It does not replace this file. See `docs/route_choice_robustness.md`.
 
 Each accepted route stores:
 
