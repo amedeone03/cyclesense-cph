@@ -25,7 +25,7 @@ The project is a **simulation-based methods study**. OpenStreetMap geometry is r
 6. Place counters with geographical K-Means, route-frequency, plain greedy maximum coverage, and community-aware greedy.
 7. Evaluate on **held-out synthetic routes** and different assumptions; compare coverage, per-community representation, robustness, time, and RAM.
 
-**Current implementation state:** exact weighted route-coverage / greedy baseline, plus an M1 pilot that downloads a small central-Copenhagen bike graph, defines physical counter segments, and generates uniform and commuter-proxy routes. LSH, Louvain, and placement experiments are **not implemented yet**. Modeled routes are not observed trips.
+**Current implementation state:** M1 through M5 are implemented. M5 checks those results with a 30-seed shuffle, new simulated evaluation samples, and a matched exact-versus-LSH timing. A separate external check compares the saved routes with published municipal bicycle counts. Modeled routes are not observed trips.
 
 ## Project structure
 
@@ -38,14 +38,31 @@ cyclesense-cph/
 │   ├── research_plan.md         # Hypotheses and evaluation protocol
 │   ├── data_sources.md          # Provenance / limitations
 │   ├── m1_assumptions.md        # M1 boundary, candidates, route rules
+│   ├── m2_baselines.md          # Placement baselines
+│   ├── m3_communities.md        # Jaccard, MinHash/LSH, and Louvain
+│   ├── m4_optimization.md       # Community-balanced placement
+│   ├── m5_final_validation.md   # Shuffle, new-sample, and LSH validation
+│   ├── standout_extension.md    # Municipal counts and complementary placement
 │   └── research_proposal.pdf    # Updated working proposal
 ├── notebooks/analysis.ipynb     # Reporting notebook starter
 ├── scripts/download_graph.py    # Optional Overpass download; skips a saved M1 graph
 ├── scripts/run_m1.py            # Pilot graph, candidates, and routes
 ├── scripts/map_m1.py            # Interactive map of the saved M1 network
+├── scripts/run_m2.py            # Placement baselines on the saved M1 routes
+├── scripts/run_m3.py            # Route similarity, LSH, and Louvain communities
+├── scripts/run_m4.py            # Community-balanced greedy on the saved routes
+├── scripts/run_m5.py            # Final validation of the saved placements
+├── scripts/run_external_validation.py  # Municipal counts and complementary greedy
+├── scripts/map_standout.py      # Interactive map of the external check
 ├── src/cyclesense/
 │   ├── coverage.py              # Exact coverage + greedy baseline
+│   ├── placement.py             # M2 baselines
 │   ├── similarity.py            # Exact Jaccard baseline
+│   ├── minhash.py               # MinHash + LSH
+│   ├── communities.py           # Louvain communities
+│   ├── balanced.py              # Community-balanced greedy
+│   ├── external_validation.py   # Count matching and complementary placement
+│   ├── standout_map.py          # Folium map of the external check
 │   ├── edges.py                 # Physical segment ids and eligibility
 │   ├── network.py               # OSMnx extract, audit, candidates
 │   ├── artifacts.py             # Canonical M1 file locations
@@ -104,18 +121,57 @@ python scripts/map_m1.py --serve
 
 `python scripts/map_m1.py --serve` rebuilds the default map and opens it at <http://127.0.0.1:8765/m1_network.html>. The page does not request `tile.openstreetmap.org`. Geometry is attributed to OpenStreetMap contributors under the ODbL.
 
+M2 places counters on the saved M1 candidates. It reads calibration routes only, then scores the held-out routes. It does not regenerate routes.
+
+```bash
+python scripts/run_m2.py
+```
+
+The protocol is `docs/m2_baselines.md`. Figures and the K=10 placement map are written under `outputs/m2/`.
+
+M3 compares calibration routes with exact Jaccard, MinHash/LSH, and Louvain. It does not place counters.
+
+```bash
+python scripts/run_m3.py
+```
+
+The protocol and the measured record are in `docs/m3_communities.md`. Figures and the community map are written under `outputs/m3/`.
+
+M4 reuses that greedy selector with calibration community weights. Lambda 0 matches the saved M2 greedy placements. It does not regenerate routes.
+
+```bash
+python scripts/run_m4.py
+```
+
+The protocol and the measured record are in `docs/m4_optimization.md`. Figures and the K=10 comparison map are written under `outputs/m4/`.
+
+M5 does not move the counters. It repeats the shuffle with 30 seeds, scores the saved placements on new simulated samples, and times exact Jaccard against verified MinHash/LSH.
+
+```bash
+python scripts/run_m5.py
+```
+
+The record is `docs/m5_final_validation.md`. Figures and tables are written under `outputs/m5/`.
+
 ## External count check
 
-`scripts/run_external_validation.py` compares the saved M1 routes with Københavns Kommune's published bicycle counts (CC0 Trafiktal file). It asks two questions: whether simulated corridor frequency ranks like observed bicycle AADT at name-matched counting sites, and how much extra held-out modeled-route coverage K additional greedy sites add beyond those sites. The method, the data limits, and the executed numbers are in `docs/standout_extension.md`. Run `python scripts/run_m1.py` first. The municipal CSV and the figures stay under gitignored `data/` and `outputs/`.
+`scripts/run_external_validation.py` compares the saved M1 routes with Københavns Kommune's published bicycle counts (CC0 Trafiktal file). It asks two questions: whether simulated corridor frequency ranks like observed bicycle AADT at name-matched counting sites, and how much extra held-out modeled-route coverage K additional greedy sites add beyond those sites. Those locations are a recurring counting programme, not a confirmed inventory of permanently installed sensors. Modeled-route coverage is not observed cyclist capture.
+
+```bash
+python scripts/run_external_validation.py
+python scripts/map_standout.py
+```
+
+The method, the data limits, and the executed numbers are in `docs/standout_extension.md`. Run `python scripts/run_m1.py` first. The municipal CSV and the figures stay under gitignored `data/` and `outputs/`. The standout map draws the matched eligible segments on the local basemap and does not request public map tiles.
 
 ## Milestones
 
 - [ ] **M0**: GitHub repository, Cursor workspace and passing local tests
 - [x] **M1**: Copenhagen subgraph extraction, topology audit, candidate sites, test routes
-- [ ] **M2**: Random/K-Means/route-frequency/greedy baselines and held-out evaluation
-- [ ] **M3**: MinHash–LSH similarity graph and Louvain route communities
-- [ ] **M4**: Community-aware placement, scenario-shift robustness, scalability plots
-- [ ] **M5**: DTU notebook and concise report, limitations and reproducible runs
+- [x] **M2**: Random/K-Means/route-frequency/greedy baselines and held-out evaluation
+- [x] **M3**: MinHash–LSH similarity graph and Louvain route communities
+- [x] **M4**: Community-balanced placement, scenario-shift check, and shuffled-label ablation
+- [x] **M5**: Final validation of the saved placements, without the graded report
 
 ## Data management
 
@@ -124,4 +180,4 @@ python scripts/map_m1.py --serve
 - Use distinct training/calibration and evaluation route samples.
 - Do not report synthetic demand assumptions as observed Copenhagen cycling patterns.
 
-See `docs/research_plan.md` for the intended experiments. This scaffold is a starting point, **not an implemented research result**.
+See `docs/research_plan.md` for the intended experiments. M1 through M5 are implemented. The external count check is an additional comparison against published municipal bicycle AADT. It does not replace the simulated-route results.

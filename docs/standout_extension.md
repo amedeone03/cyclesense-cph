@@ -2,7 +2,7 @@
 
 This note compares three ways to extend CycleSense and records the extension that was implemented. It does not replace M3 (MinHash, LSH, Louvain) or the proposed M4 placement objective.
 
-M1 is the saved Indre By graph and the uniform / commuter-proxy routes. On this branch, `main` contains the exact coverage function in `src/cyclesense/coverage.py` and its unit tests. It does not contain an M2 experiment report, a K-means placement, or a route-frequency placement run. The extension therefore reuses `evaluate_coverage` and `greedy_max_coverage` and does not read or write an M2 result file.
+M1 is the saved Indre By graph and the uniform / commuter-proxy routes. M2 through M5 are the placement, community, and validation results on those routes. This extension reuses `evaluate_coverage` and `greedy_max_coverage`, the same coverage definition as M2. It does not read or write an M2–M5 result file, and it does not change the saved M1 graph or routes.
 
 ## 1. Options
 
@@ -48,7 +48,8 @@ Pre-specified rules, fixed before any rank correlation was computed:
 | --- | --- |
 | Parsing, matching, Spearman, complementary greedy | `src/cyclesense/external_validation.py` |
 | Reproducible run | `scripts/run_external_validation.py` |
-| Unit tests | `tests/test_external_validation.py` |
+| Interactive map | `src/cyclesense/standout_map.py`, `scripts/map_standout.py` |
+| Unit tests | `tests/test_external_validation.py`, `tests/test_standout_map.py` |
 | This note | `docs/standout_extension.md` |
 
 Command, from the repository root after `python scripts/run_m1.py`:
@@ -100,6 +101,8 @@ Figures, gitignored under `outputs/standout/`:
 
 Tables: `alignment_primary.csv`, `coverage.csv`, `matches_recurring.csv`, `summary.json`.
 
+`python scripts/map_standout.py` writes `outputs/standout/standout_counters.html` from the same M1 artifacts and the cached municipal CSV. The default layers are the 26 name-verified locations and the first five greedy additions for the uniform scenario. The next five uniform segments, and both commuter-proxy groups, stay in the layer control. Lines are the matched eligible street geometries. Popups show the published bicycle AADT, the published coordinate, and the physical-edge ID. Street names on the basemap are hover text. The page does not request public map tiles. The caption states held-out modeled-route coverage for the existing set, the set plus 5, and the set plus 10, separately for the uniform and commuter-proxy scenarios.
+
 ## 5. What this does not show
 
 - A correlation is not evidence that the simulator causes, or equals, municipal counts.
@@ -112,4 +115,4 @@ Tables: `alignment_primary.csv`, `coverage.csv`, `matches_recurring.csv`, `summa
 
 ## 6. Why it helps the DTU report
 
-The algorithmic half of the project can show that a placement method covers simulated routes and, later, route communities. This extension adds an external measurement those algorithms do not use. Inside the pilot rectangle, simulated route frequency does not reliably rank the city's recurring bicycle counts: the primary Spearman coefficients are about 0.23–0.26 with permutation p-values about 0.20–0.25. The same sites already intercept roughly three quarters of the held-out simulated routes, a coverage-maximising set of the same size intercepts 0.88 while sharing only 3 edges, and five further greedy segments add about ten percentage points of modeled-route coverage. The report can use those statements without calling them observed cyclist coverage, and without waiting for MinHash, Louvain, or M4.
+M3 through M5 show what the placement methods do on simulated routes. This extension adds an external measurement those algorithms do not use. Inside the pilot rectangle, simulated route frequency does not reliably rank the city's recurring bicycle counts: the primary Spearman coefficients are about 0.23–0.26 with permutation p-values about 0.20–0.25. The same sites already intercept roughly three quarters of the held-out simulated routes, a coverage-maximising set of the same size intercepts 0.88 while sharing only 3 edges, and five further greedy segments add about ten percentage points of modeled-route coverage. The report can place those statements beside the M1–M5 results without calling them observed cyclist coverage. The weak rank agreement qualifies the simulated routes: they are a usable coverage benchmark, and they are not a ranking of published bicycle AADT. Dronning Louises Bro, on the west edge of the study rectangle, is the clearest boundary effect behind that qualification.

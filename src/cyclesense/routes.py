@@ -10,7 +10,7 @@ All scenario weights are 1. That records one accepted draw, not a cyclist count.
 """
 
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from itertools import pairwise
 from typing import Any
@@ -93,12 +93,16 @@ def generate_modeled_routes(
     anchor_xy: tuple[float, float] | None = None,
     distance_floor_m: float = 50.0,
     max_attempts_factor: int = 60,
+    blocked_od: Iterable[tuple[int, int]] | None = None,
+    blocked_paths: Iterable[tuple[str, ...]] | None = None,
 ) -> tuple[list[ModeledRoute], dict[str, Any]]:
     """Build independent calibration and evaluation samples for one scenario.
 
     ``coordinates_m`` must be projected metres for the same node ids as
     ``graph``. The graph itself can stay in WGS84; only its topology and
-    ``length`` attributes are used for routing.
+    ``length`` attributes are used for routing. ``blocked_od`` and
+    ``blocked_paths`` are additional pairs and physical paths that neither
+    split may repeat. Callers that omit them keep the original behavior.
     """
     import networkx as nx
 
@@ -178,17 +182,21 @@ def generate_modeled_routes(
         split="calibration",
         count=n_calibration,
         seed=calibration_seed,
-        excluded_od=set(),
-        excluded_paths=set(),
+        excluded_od=set(blocked_od or ()),
+        excluded_paths=set(blocked_paths or ()),
     )
     calibration_od = {(route.origin_node, route.destination_node) for route in calibration}
     calibration_paths = {route.physical_edge_ids for route in calibration}
+    evaluation_od = set(blocked_od or ())
+    evaluation_od.update(calibration_od)
+    evaluation_paths = set(blocked_paths or ())
+    evaluation_paths.update(calibration_paths)
     evaluation, evaluation_stats = build_split(
         split="evaluation",
         count=n_evaluation,
         seed=evaluation_seed,
-        excluded_od=calibration_od,
-        excluded_paths=set(calibration_paths),
+        excluded_od=evaluation_od,
+        excluded_paths=evaluation_paths,
     )
     return calibration + evaluation, {
         "scenario": scenario,

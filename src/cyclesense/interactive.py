@@ -109,7 +109,14 @@ def _collection_features(basemap: Mapping[str, Any], key: str) -> list[dict[str,
     return [feature for feature in features if feature.get("geometry")]
 
 
-def _add_geojson(group: Any, features: Sequence[Mapping[str, Any]], style: dict[str, Any], *, tooltip: bool) -> None:
+def _add_geojson(
+    group: Any,
+    features: Sequence[Mapping[str, Any]],
+    style: dict[str, Any],
+    *,
+    tooltip: bool,
+    sticky: bool = False,
+) -> None:
     import folium
 
     if not features:
@@ -121,11 +128,30 @@ def _add_geojson(group: Any, features: Sequence[Mapping[str, Any]], style: dict[
         "overlay": True,
     }
     if tooltip:
-        kwargs["tooltip"] = folium.GeoJsonTooltip(fields=["name"], aliases=[""], labels=False)
+        kwargs["tooltip"] = folium.GeoJsonTooltip(
+            fields=["name"],
+            aliases=[""],
+            labels=False,
+            sticky=sticky,
+        )
     folium.GeoJson(collection, **kwargs).add_to(group)
 
 
-def _add_basemap(fmap: Any, basemap: Mapping[str, Any]) -> bool:
+def _split_named(
+    features: Sequence[Mapping[str, Any]],
+) -> tuple[list[Mapping[str, Any]], list[Mapping[str, Any]]]:
+    named: list[Mapping[str, Any]] = []
+    unnamed: list[Mapping[str, Any]] = []
+    for feature in features:
+        name = str(feature.get("properties", {}).get("name") or "").strip()
+        if name:
+            named.append(feature)
+        else:
+            unnamed.append(feature)
+    return named, unnamed
+
+
+def _add_basemap(fmap: Any, basemap: Mapping[str, Any], *, permanent_labels: bool = True) -> bool:
     """Add one switchable context layer. Return False when it has no features."""
     import folium
 
@@ -175,7 +201,21 @@ def _add_basemap(fmap: Any, basemap: Mapping[str, Any]) -> bool:
         return False
     layer = folium.FeatureGroup(name="Geographical basemap", show=True)
     for _name, features, style, tooltip in groups:
-        _add_geojson(layer, features, style, tooltip=tooltip)
+        if tooltip and not permanent_labels:
+            named, unnamed = _split_named(features)
+            _add_geojson(layer, unnamed, style, tooltip=False)
+            _add_geojson(layer, named, style, tooltip=True, sticky=True)
+        else:
+            _add_geojson(layer, features, style, tooltip=tooltip)
+    if permanent_labels:
+        _add_street_labels(labels, layer)
+    layer.add_to(fmap)
+    return True
+
+
+def _add_street_labels(labels: Sequence[Mapping[str, Any]], layer: Any) -> None:
+    import folium
+
     for feature in labels:
         coordinates = feature["geometry"].get("coordinates") or []
         if len(coordinates) < 2:
@@ -194,8 +234,6 @@ def _add_basemap(fmap: Any, basemap: Mapping[str, Any]) -> bool:
                 html=f'<div class="street-label-text">{html.escape(name)}</div>',
             ),
         ).add_to(layer)
-    layer.add_to(fmap)
-    return True
 
 
 def write_interactive_map(
