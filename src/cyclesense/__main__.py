@@ -1,4 +1,4 @@
-"""Tiny local smoke test; real network analysis is intentionally not implemented yet."""
+"""Small synthetic coverage check. It does not load Copenhagen data."""
 
 from .coverage import greedy_max_coverage
 

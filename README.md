@@ -46,6 +46,7 @@ cyclesense-cph/
 │   ├── m5_final_validation.md   # Shuffle, new-sample, and LSH validation
 │   ├── integrated_study.md      # Exact versus verified-LSH placement pipelines
 │   ├── route_choice_robustness.md  # Fixed placements on simulated detours
+│   ├── robust_placement.md      # Shared placement trained on simulated detours
 │   ├── scalability_study.md     # Streaming exact and verified LSH at larger samples
 │   ├── reproducibility.md       # Install, snapshots, and experiment order
 │   ├── standout_extension.md    # Municipal counts and complementary placement
@@ -61,6 +62,7 @@ cyclesense-cph/
 ├── scripts/run_integrated_study.py  # Exact versus verified-LSH pipelines
 ├── scripts/run_route_choice_study.py  # Fixed placements on simulated detours
 ├── scripts/run_scalability_study.py  # Larger nested samples, exact and LSH
+├── scripts/run_robust_placement.py  # Shared placement on simulated route choices
 ├── scripts/run_external_validation.py  # Municipal counts and complementary greedy
 ├── scripts/map_standout.py      # Interactive map of the external check
 ├── scripts/reproduce.py         # Smoke check or ordered rerun of existing scripts
@@ -120,7 +122,13 @@ The published experiment order, without the 10,000-route scalability study, is:
 python scripts/reproduce.py --mode full --skip-heavy
 ```
 
-`--skip-heavy` omits `scripts/run_scalability_study.py` only. Integrated LSH and route-choice still run when their outputs are missing. Existing outputs are kept unless you pass `--confirm-overwrite`. The command has been run on a tree that already contains the saved results, where every step was skipped and the consistency checks passed. It has not been run here as a from-scratch rebuild. Data, checksums, and that limitation are in `docs/reproducibility.md`.
+`--skip-heavy` omits `scripts/run_scalability_study.py` only. Integrated LSH, route-choice, and robust placement still run when their outputs are missing. Existing outputs are kept unless you pass `--confirm-overwrite`. Full mode has been run here only as a skip of existing outputs. It has not been run as a from-scratch rebuild. Data, checksums, and that limitation are in `docs/reproducibility.md`.
+
+The route-choice-aware placement reads calibration routes only:
+
+```bash
+python scripts/run_robust_placement.py
+```
 
 The M1 pilot uses the rectangle in `configs/pilot.yaml`. A first build reads `cache/osm/Copenhagen.osm.pbf` and, if that file is absent, downloads the current BBBike Copenhagen extract. That URL is not a frozen historical snapshot. Exact graph reproduction needs the PBF whose SHA-256 is recorded in `configs/reproducibility.yaml`, or the saved GraphML. The build needs the `analysis` extra, including `osmium`:
 
@@ -243,6 +251,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - Five greedy segments added beyond those 26 sites raise held-out modeled-route coverage by about ten percentage points in both scenarios.
 - With the OD pairs and counter IDs held fixed, short simulated detours lower K = 10 coverage by about 7–8 percentage points in the uniform scenario and about 3–4 in the commuter scenario. At K = 20 the drop is about 4–5 points. Greedy usually stays ahead of the lambda-0.25 placement. The wider 30% cap adds little beyond the 15% cap, because most accepted detours are already shorter than 15%.
 - On a nested uniform sample, verified LSH with 32 permutations and 16×2 bands keeps about 99.6% of the exact Jaccard edges from 500 to 10,000 routes and is about eight times faster than streaming exact at 10,000 routes. Streaming exact uses less Python-tracked memory at every size. The ten selected counters still change as the sample grows.
+- A shared greedy set trained on shortest paths and 15% calibration detours does not improve held-out coverage under alternative routes. At K=10 it keeps 9 of the 10 pooled shortest-path counters. On fresh seeds it is about one point lower on uniform alternatives and about one point higher on commuter alternatives. Its shortest-path coverage is lower, especially for uniform routes (69.6% against 72.8% for the uniform greedy). Details are in `docs/robust_placement.md`.
 
 ## Limitations
 
@@ -266,6 +275,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - [x] **M5.6**: Route-choice sensitivity of the saved placements, without the graded report
 - [x] **M5.7**: Scalability of streaming exact and verified LSH on larger simulated samples, without the graded report
 - [x] **M5.8**: Reproducibility freeze: snapshots, smoke check, and ordered rerun
+- [x] **M5.9**: Route-choice-aware placement, with a negative held-out result against the pooled shortest-path control
 
 ## Data management
 

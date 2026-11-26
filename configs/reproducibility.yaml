@@ -45,6 +45,7 @@ workflow:
     - {id: municipal, script: scripts/run_external_validation.py, sentinel: outputs/standout/summary.json}
     - {id: integrated, script: scripts/run_integrated_study.py, sentinel: outputs/integrated/summary.json}
     - {id: route_choice, script: scripts/run_route_choice_study.py, sentinel: outputs/route_choice/summary.json}
+    - {id: robust_placement, script: scripts/run_robust_placement.py, sentinel: outputs/robust_placement/summary.json}
     - {id: scalability, script: scripts/run_scalability_study.py, sentinel: outputs/scalability/summary.json}
     - {id: map_m1, script: scripts/map_m1.py, sentinel: outputs/m1/m1_network.html}
     - {id: map_standout, script: scripts/map_standout.py, sentinel: outputs/standout/standout_counters.html}

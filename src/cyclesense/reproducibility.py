@@ -281,6 +281,8 @@ def validate_outputs(root: Path, *, allow_missing: set[str] | None = None) -> tu
         errors.extend(_check_scalability(root))
     if (root / "outputs/standout/summary.json").is_file():
         errors.extend(_check_municipal(root))
+    if (root / "outputs/robust_placement/summary.json").is_file():
+        errors.extend(_check_robust_placement(root))
     return errors, notes
 
 
@@ -459,6 +461,30 @@ def _check_route_choice(root: Path) -> list[str]:
                 break
     if not limits:
         errors.append("route-choice diagnostics have no detour limits")
+    return errors
+
+
+def _check_robust_placement(root: Path) -> list[str]:
+    summary = json.loads((root / "outputs/robust_placement/summary.json").read_text(encoding="utf-8"))
+    errors = []
+    if summary.get("routes_are_simulated") is not True:
+        errors.append("robust placement summary does not mark routes as simulated")
+    if summary.get("training_uses_calibration_only") is not True:
+        errors.append("robust placement training is not marked as calibration-only")
+    if summary.get("held_out_used_for_selection") is not False:
+        errors.append("robust placement does not record that held-out routes were unused")
+    if summary.get("seed_ranges_disjoint") is not True:
+        errors.append("robust placement seed ranges are not marked disjoint")
+    placements = root / "outputs/robust_placement/placements.csv"
+    if placements.is_file():
+        seen: dict[tuple[str, str], set[str]] = {}
+        with placements.open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle):
+                key = (row["method"], row["k"])
+                seen.setdefault(key, set()).add(row["physical_edge_id"])
+        for (method, k_text), edges in seen.items():
+            if len(edges) != int(k_text):
+                errors.append(f"robust placement {method} K={k_text} does not have K distinct edges")
     return errors
 
 

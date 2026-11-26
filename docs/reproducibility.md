@@ -69,10 +69,11 @@ Full mode runs the existing scripts in this order:
 6. `scripts/run_external_validation.py`
 7. `scripts/run_integrated_study.py`
 8. `scripts/run_route_choice_study.py`
-9. `scripts/run_scalability_study.py` (heavy)
-10. `scripts/map_m1.py`
-11. `scripts/map_standout.py`
-12. `scripts/validate_results.py`
+9. `scripts/run_robust_placement.py`
+10. `scripts/run_scalability_study.py` (heavy)
+11. `scripts/map_m1.py`
+12. `scripts/map_standout.py`
+13. `scripts/validate_results.py`
 
 A step whose output file already exists is skipped. Pass `--confirm-overwrite` to rerun it. That flag can replace saved results because the runners write to fixed paths. There is no separate output directory.
 
@@ -80,7 +81,7 @@ A step whose output file already exists is skipped. Pass `--confirm-overwrite` t
 python scripts/reproduce.py --mode full --skip-heavy
 ```
 
-`--skip-heavy` skips step 9 only: the nested 500 to 10,000 route scalability study. Integrated LSH and route-choice still run when their outputs are absent. Those two studies are part of the published results. On this machine the integrated study took several minutes and the scalability study took about 17 minutes. A from-scratch M1 build also needs the OSM extract and a network connection the first time the PBF is fetched.
+`--skip-heavy` skips step 10 only: the nested 500 to 10,000 route scalability study. Integrated LSH, route-choice, and robust placement still run when their outputs are absent. On this machine the integrated study took several minutes, the scalability study took about 17 minutes, and the robust-placement study took about 36 seconds once the saved graph was loaded. A from-scratch M1 build also needs the OSM extract and a network connection the first time the PBF is fetched.
 
 This repository was not rebuilt from an empty `data/` and `outputs/` tree during the reproducibility freeze. The smoke check and `python scripts/validate_results.py` were run against the saved artifacts. Full mode on that tree skips every step that already has an output.
 

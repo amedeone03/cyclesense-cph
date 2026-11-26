@@ -158,6 +158,26 @@ scalability_study:
   subset_recall_routes: 400
   subset_recall_seed: 73007
 
+# M5.9 route-choice-aware placement. These seeds and weights were fixed
+# before any held-out score from this study was computed. Training uses
+# calibration OD pairs only. 82000–82009 do not overlap 91000–91019 or
+# 92000–92019.
+robust_placement:
+  sigma: 0.35
+  training_detour_limit: 0.15
+  training_seed_start: 82000
+  training_n_seeds: 10
+  evaluation_seed_start: 92000
+  evaluation_n_seeds: 20
+  reference_seed_start: 91000
+  reference_n_seeds: 20
+  evaluation_detour_limits: [0.15, 0.30]
+  budgets: [10, 20]
+  municipal_additions: 5
+  balanced_lambda: 0.25
+  placement_threshold: 0.5
+  scenarios: [uniform, commuter_proxy]
+
 notes: >
   M1 pilot parameters. The rectangle above is the exact study boundary.
   Uniform and commuter-proxy draws are simulated routes, not bicycle counts.
@@ -173,3 +193,5 @@ notes: >
   placements or redraw the saved OD pairs.
   scripts/run_scalability_study.py reads scalability_study. It does not
   overwrite the M1 routes or the integrated-study benchmarks.
+  scripts/run_robust_placement.py reads robust_placement. It does not
+  refit M2 or M4, and it does not read held-out routes while selecting.
