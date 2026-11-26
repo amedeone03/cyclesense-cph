@@ -2,7 +2,7 @@
 
 M5 checks the M2–M4 conclusions without fitting a new placement rule. The counters stay the ones already chosen on the calibration routes. New simulated routes are used only for scoring.
 
-The street graph is the saved OpenStreetMap extract. The journeys are simulated. Similarities are exact or approximate Jaccard values on those simulated routes. Counter sites are eligible physical segments selected by an algorithm. This repository does not contain municipal bicycle counts, and none of the percentages below are observed cyclist volumes.
+The street graph is the saved OpenStreetMap extract. The journeys are simulated. Similarities are exact or approximate Jaccard values on those simulated routes. Counter sites are eligible physical segments selected by an algorithm. None of the percentages below are observed cyclist volumes. M5 does not score municipal bicycle counts. That comparison is separate, in `docs/standout_extension.md`, and the count file is not stored in Git.
 
 ## Questions
 
@@ -119,7 +119,7 @@ MinHash with the frozen 32-by-16-by-2 banding, followed by exact verification, r
 
 ## What it cannot support
 
-- No percentage here is a measured bicycle volume. The City of Copenhagen counter network was not scored.
+- No percentage here is a measured bicycle volume. M5 did not score the municipal counting programme.
 - The robustness claim covers two simulated demand rules on one small street graph.
 - The outside-central-90% flag is a percentile statement about 30 shuffles or 20 samples. It is not a hypothesis test, and the intervals are wide.
 - Most calibration routes are singletons at Jaccard 0.5, and only about 55–57% of the original held-out routes received an unambiguous community in M3. Balancing cannot represent a route the assignment leaves unnamed.
