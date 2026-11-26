@@ -75,13 +75,14 @@ def test_manifest_parses_and_keeps_step_order() -> None:
     assert ids.index("municipal") < ids.index("integrated") < ids.index("scalability")
     assert steps[-1].id == "map_standout"
     heavy = [step.id for step in steps if step.heavy]
-    assert heavy == ["scalability"]
+    assert heavy == ["exact_optimization", "scalability"]
 
 
-def test_skip_heavy_removes_only_the_scalability_study() -> None:
+def test_skip_heavy_omits_the_large_benchmarks() -> None:
     steps = workflow_steps(load_manifest(ROOT))
     kept = [step.id for step in selected_steps(steps, skip_heavy=True)]
     assert "scalability" not in kept
+    assert "exact_optimization" not in kept
     assert "integrated" in kept
     assert "route_choice" in kept
 

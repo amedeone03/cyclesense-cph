@@ -34,6 +34,7 @@ dev = [
   "networkx>=3.2",
   "folium>=0.16",
   "pyyaml>=6",
+  "scipy>=1.11",
 ]
 
 [tool.setuptools.packages.find]

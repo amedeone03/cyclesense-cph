@@ -283,6 +283,8 @@ def validate_outputs(root: Path, *, allow_missing: set[str] | None = None) -> tu
         errors.extend(_check_municipal(root))
     if (root / "outputs/robust_placement/summary.json").is_file():
         errors.extend(_check_robust_placement(root))
+    if (root / "outputs/exact_optimization/summary.json").is_file():
+        errors.extend(_check_exact_optimization(root))
     return errors, notes
 
 
@@ -461,6 +463,30 @@ def _check_route_choice(root: Path) -> list[str]:
                 break
     if not limits:
         errors.append("route-choice diagnostics have no detour limits")
+    return errors
+
+
+def _check_exact_optimization(root: Path) -> list[str]:
+    summary = json.loads((root / "outputs/exact_optimization/summary.json").read_text(encoding="utf-8"))
+    errors = []
+    if summary.get("routes_are_simulated") is not True:
+        errors.append("exact optimization summary does not mark routes as simulated")
+    if summary.get("held_out_used_for_selection") is not False:
+        errors.append("exact optimization used held-out routes for selection")
+    runs = root / "outputs/exact_optimization/solver_runs.csv"
+    if runs.is_file():
+        with runs.open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle):
+                status = row.get("status")
+                if status not in {"optimal", "time_limited", "infeasible", "unbounded", "failed", "no_incumbent"}:
+                    errors.append(f"unknown MILP status {status}")
+                    break
+                if status == "time_limited" and str(row.get("proven_optimal")).lower() == "true":
+                    errors.append("a time-limited MILP run is marked proven optimal")
+                    break
+                if status == "optimal" and str(row.get("proven_optimal")).lower() != "true":
+                    errors.append("an optimal MILP run is not marked proven")
+                    break
     return errors
 
 

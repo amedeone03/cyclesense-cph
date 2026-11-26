@@ -122,12 +122,18 @@ The published experiment order, without the 10,000-route scalability study, is:
 python scripts/reproduce.py --mode full --skip-heavy
 ```
 
-`--skip-heavy` omits `scripts/run_scalability_study.py` only. Integrated LSH, route-choice, and robust placement still run when their outputs are missing. Existing outputs are kept unless you pass `--confirm-overwrite`. Full mode has been run here only as a skip of existing outputs. It has not been run as a from-scratch rebuild. Data, checksums, and that limitation are in `docs/reproducibility.md`.
+`--skip-heavy` omits the exact MILP benchmark and `scripts/run_scalability_study.py`. Integrated LSH, route-choice, and robust placement still run when their outputs are missing. Existing outputs are kept unless you pass `--confirm-overwrite`. Full mode has been run here only as a skip of existing outputs. It has not been run as a from-scratch rebuild. Data, checksums, and that limitation are in `docs/reproducibility.md`.
 
 The route-choice-aware placement reads calibration routes only:
 
 ```bash
 python scripts/run_robust_placement.py
+```
+
+The exact coverage benchmark is optional. It does not replace greedy, and smoke mode does not run it:
+
+```bash
+python scripts/run_exact_optimization.py
 ```
 
 The M1 pilot uses the rectangle in `configs/pilot.yaml`. A first build reads `cache/osm/Copenhagen.osm.pbf` and, if that file is absent, downloads the current BBBike Copenhagen extract. That URL is not a frozen historical snapshot. Exact graph reproduction needs the PBF whose SHA-256 is recorded in `configs/reproducibility.yaml`, or the saved GraphML. The build needs the `analysis` extra, including `osmium`:
@@ -276,6 +282,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - [x] **M5.7**: Scalability of streaming exact and verified LSH on larger simulated samples, without the graded report
 - [x] **M5.8**: Reproducibility freeze: snapshots, smoke check, and ordered rerun
 - [x] **M5.9**: Route-choice-aware placement, with a negative held-out result against the pooled shortest-path control
+- [x] **M5.10**: Exact MILP benchmark of the coverage objective. Greedy matches the optimum at K=5 and K=10; a higher calibration value does not consistently raise held-out coverage
 
 ## Data management
 

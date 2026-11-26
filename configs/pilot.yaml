@@ -178,6 +178,22 @@ robust_placement:
   placement_threshold: 0.5
   scenarios: [uniform, commuter_proxy]
 
+# M5.10 exact maximum coverage. The time limit and gap were fixed before
+# looking at held-out scores. A run is optimal only when HiGHS certifies it.
+exact_optimization:
+  time_limit_seconds: 120
+  mip_rel_gap: 1.0e-6
+  budgets: [5, 10, 20, 30]
+  community_lambda: 0.25
+  community_threshold: 0.5
+  weighted_budgets: [10, 20]
+  pooled_k: 10
+  robust_k: 10
+  scale_route_counts: [100, 250, 500, 1000]
+  scale_k: 10
+  municipal_additions: 5
+  scenarios: [uniform, commuter_proxy]
+
 notes: >
   M1 pilot parameters. The rectangle above is the exact study boundary.
   Uniform and commuter-proxy draws are simulated routes, not bicycle counts.
@@ -195,3 +211,5 @@ notes: >
   overwrite the M1 routes or the integrated-study benchmarks.
   scripts/run_robust_placement.py reads robust_placement. It does not
   refit M2 or M4, and it does not read held-out routes while selecting.
+  scripts/run_exact_optimization.py reads exact_optimization. It does not
+  refit greedy placements or use held-out routes inside the MILP.
