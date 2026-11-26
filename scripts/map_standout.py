@@ -1,7 +1,8 @@
 """Draw the municipal counting locations and the complementary greedy sites.
 
 This reads the canonical M1 graph and routes, plus the cached municipal CSV.
-It writes only ``outputs/standout/standout_counters.html`` and, when the local
+It writes only ``outputs/standout/standout_counters.html``,
+``outputs/standout/standout_counters.png``, and, when the local
 PBF can be read, a display-basemap cache beside that file. It does not modify
 M1–M5 artifacts and it does not refresh the municipal download.
 
@@ -25,6 +26,7 @@ from run_external_validation import load_segments
 
 from cyclesense.artifacts import validated_m1_artifacts
 from cyclesense.basemap import load_context_basemap
+from cyclesense.coverage import evaluate_coverage
 from cyclesense.external_validation import (
     PRIMARY_SAMPLE,
     evaluate_extension,
@@ -37,6 +39,7 @@ from cyclesense.standout_map import (
     addition_tranches,
     default_addition_visible,
     write_standout_map,
+    write_standout_static,
 )
 
 COUNTS_PATH = REPO_ROOT / "data" / "external" / "trafiktal.csv"
@@ -83,8 +86,14 @@ def main() -> None:
         by_budget = {int(row["budget_new"]): list(row["added_edges"]) for row in scenario["budgets"]}
         first, nxt = addition_tranches(by_budget)
         name = str(scenario["scenario"])
-        layers.append(_addition_layer(name, "first", first, geometry, start_rank=1))
-        layers.append(_addition_layer(name, "next", nxt, geometry, start_rank=len(first) + 1))
+        gains = _calibration_gains(
+            routes,
+            name,
+            [row["physical_edge_id"] for row in primary],
+            list(by_budget[10]),
+        )
+        layers.append(_addition_layer(name, "first", first, geometry, gains, start_rank=1))
+        layers.append(_addition_layer(name, "next", nxt, geometry, gains, start_rank=len(first) + 1))
         plus = {int(row["budget_new"]): float(row["held_out_existing_plus_new"]) for row in scenario["budgets"]}
         coverage.append(
             {
@@ -105,7 +114,15 @@ def main() -> None:
         basemap=basemap,
         notes=_notes(primary, result),
     )
+    static = write_standout_static(
+        existing,
+        layers,
+        OUTPUT_DIR / "standout_counters.png",
+        context=[segment.polyline for segment in segments],
+        boundary=bbox,
+    )
     print(f"Wrote {output.relative_to(REPO_ROOT)}", flush=True)
+    print(f"Wrote {static.relative_to(REPO_ROOT)}", flush=True)
     print(f"Name-verified locations: {len(existing)}", flush=True)
     for row in coverage:
         print(
@@ -134,11 +151,30 @@ def _existing_site(row: dict[str, Any], geometry: dict[str, Any]) -> dict[str, A
     }
 
 
+def _calibration_gains(routes, scenario: str, existing: list[str], ordered: list[str]) -> dict[str, float]:
+    """Marginal calibration coverage of each added segment, in greedy order."""
+    calibration = {
+        route.route_id: set(route.physical_edge_ids)
+        for route in routes
+        if route.scenario == scenario and route.split == "calibration"
+    }
+    previous = evaluate_coverage(calibration, existing).coverage_fraction
+    chosen = list(existing)
+    gains: dict[str, float] = {}
+    for edge in ordered:
+        chosen.append(edge)
+        current = evaluate_coverage(calibration, chosen).coverage_fraction
+        gains[edge] = current - previous
+        previous = current
+    return gains
+
+
 def _addition_layer(
     scenario: str,
     tranche: str,
     edge_ids: tuple[str, ...],
     geometry: dict[str, Any],
+    gains: dict[str, float],
     *,
     start_rank: int,
 ) -> dict[str, Any]:
@@ -156,12 +192,14 @@ def _addition_layer(
                 "osm_name": segment.name,
                 "scenario": scenario,
                 "rank": rank,
+                "calibration_gain": gains.get(edge_id),
             }
         )
     return {
         "name": f"{label} — {pretty}",
         "show": default_addition_visible(scenario, tranche),
         "color": FIRST_COLOR if tranche == "first" else NEXT_COLOR,
+        "dash": "7 5" if scenario == "commuter_proxy" else "",
         "sites": sites,
     }
 

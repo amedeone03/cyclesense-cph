@@ -56,6 +56,7 @@ def test_map_draws_municipal_aadt_and_hides_optional_additions(tmp_path: Path) -
                         "osm_name": "Vester Voldgade",
                         "scenario": "uniform",
                         "rank": 1,
+                        "calibration_gain": 0.02,
                     }
                 ],
             },
@@ -123,6 +124,12 @@ def test_map_draws_municipal_aadt_and_hides_optional_additions(tmp_path: Path) -
     assert "Not approved for installation" in text
     assert "Not observed cyclist capture" in text
     assert "study rectangle" in text
+    assert "How to read this map" in text
+    assert "Calibration-route coverage added by this segment" in text
+    assert "+2.0 pp" in text
+    assert "#8a8a8a" in text
+    assert "#3d3d3d" not in text
+    assert '"collapsed": true' in text
     assert "tile.openstreetmap.org" not in text
     assert '"pane": "markerPane"' in text or '"pane":"markerPane"' in text
     assert "street-label" not in text

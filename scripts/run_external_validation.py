@@ -37,6 +37,7 @@ from cyclesense.external_validation import (
     evaluate_extension,
     load_count_sites,
     load_route_records,
+    municipal_ssl_context,
     parse_linestring,
     segments_from_directed_edges,
 )
@@ -108,9 +109,28 @@ def ensure_counts(path: Path, *, refresh: bool) -> None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        urllib.request.urlretrieve(TRAFIKTAL_CSV_URL, path)
+        _download_counts(TRAFIKTAL_CSV_URL, path)
     except OSError as exc:
-        raise SystemExit(f"Could not download municipal counts from {TRAFIKTAL_CSV_URL}: {exc}") from exc
+        hint = ""
+        if exc.__class__.__name__ == "SSLCertVerificationError":
+            hint = (
+                " Certificate verification stayed on. Install the analysis extra "
+                "(it includes certifi) or, on a python.org macOS install, run "
+                "Install Certificates.command. Do not disable SSL verification."
+            )
+        raise SystemExit(
+            f"Could not download municipal counts from {TRAFIKTAL_CSV_URL}: {exc}.{hint} "
+            "An exact reproduction uses the recorded local snapshot rather than a later download."
+        ) from exc
+
+
+def _download_counts(url: str, path: Path) -> None:
+    request = urllib.request.Request(url, headers={"User-Agent": "cyclesense-cph"})
+    with urllib.request.urlopen(request, context=municipal_ssl_context(), timeout=120) as response:
+        payload = response.read()
+    if not payload:
+        raise OSError(f"empty response from {url}")
+    path.write_bytes(payload)
 
 
 def load_segments(graph_path: Path, candidates_path: Path):

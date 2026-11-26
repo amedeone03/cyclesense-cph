@@ -76,7 +76,7 @@ cyclesense-cph/
 
 ## Get started (Cursor / macOS)
 
-From the project folder, open the **Terminal** in Cursor and run:
+Requires Python 3.11 or newer. From the project folder, open the **Terminal** in Cursor and run:
 
 ```bash
 python3 -m venv .venv
@@ -162,7 +162,42 @@ python scripts/run_external_validation.py
 python scripts/map_standout.py
 ```
 
-The method, the data limits, and the executed numbers are in `docs/standout_extension.md`. Run `python scripts/run_m1.py` first. The municipal CSV and the figures stay under gitignored `data/` and `outputs/`. The standout map draws the matched eligible segments on the local basemap and does not request public map tiles.
+The method, the data limits, and the executed numbers are in `docs/standout_extension.md`. Run `python scripts/run_m1.py` first. The municipal CSV and the figures stay under gitignored `data/` and `outputs/`. The standout map draws the matched eligible segments on the local basemap and does not request public map tiles. A static copy of the same geometries is `outputs/standout/standout_counters.png`.
+
+The download checks the municipal server's HTTPS certificate. It does not turn verification off. If macOS Python reports `CERTIFICATE_VERIFY_FAILED`, install the `analysis` extra (it includes `certifi`) or run `Install Certificates.command` from the python.org installation, then retry. The live municipal file can change. Exact reproduction uses the local snapshot recorded in `docs/data_sources.md`, SHA-256 `d46f3214ee2a4db9c8ff9a9708934fe6c6fbfb8b0f753aa0dd9ba58981a341ad`.
+
+## Open the maps
+
+After the matching script has run, open the HTML file in a browser. None of these pages request public map tiles.
+
+| Map | Command | File |
+| --- | --- | --- |
+| M1 network | `python scripts/map_m1.py` | `outputs/m1/m1_network.html` |
+| M2 placements | written by `run_m2.py` | `outputs/m2/placements_k10.html` |
+| M3 communities | written by `run_m3.py` | `outputs/m3/communities.html` |
+| M4 placements | written by `run_m4.py` | `outputs/m4/placements_k10.html` |
+| Municipal comparison | `python scripts/map_standout.py` | `outputs/standout/standout_counters.html` |
+
+## Principal findings
+
+These are the results of the saved runs. The detailed tables are in `docs/`.
+
+- Greedy maximum coverage covers more held-out simulated routes than random, K-Means, or route-frequency placement.
+- MinHash/LSH retrieves nearly the same similar pairs as exact Jaccard and is faster once both operations return the pairs, from 500 to 2000 routes in the measured series. Exact comparison uses less memory.
+- Louvain communities on these routes are fragmented, with many singletons.
+- Community balancing does not consistently raise held-out coverage or robustness. Some higher weights raise calibration-community representation, and one commuter setting covers fewer held-out routes than size-matched shuffles.
+- Published municipal counts do not rank like simulated corridor frequency at the 26 name-matched sites. The counts also show where the simulated routes miss a busy bridge.
+- Five greedy segments added beyond those 26 sites raise held-out modeled-route coverage by about ten percentage points in both scenarios.
+
+## Limitations
+
+- Simulated routes are generated shortest paths, not observed journeys.
+- Modeled-route coverage is not the share of cyclists a counter would record.
+- Municipal counting locations are a recurring count programme, not a confirmed list of permanent sensors.
+- Proposed segments are model selections, not approved installation sites.
+- Calibration numbers, including a popup's incremental gain, are not held-out evidence.
+- The municipal CSV can change. The recorded snapshot hash is the one used for the reported numbers.
+- The study rectangle cuts off routes at its boundary, so a busy street on the edge can have a high published count and few simulated traversals.
 
 ## Milestones
 
