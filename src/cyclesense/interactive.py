@@ -151,13 +151,27 @@ def _split_named(
     return named, unnamed
 
 
-def _add_basemap(fmap: Any, basemap: Mapping[str, Any], *, permanent_labels: bool = True) -> bool:
+def _add_basemap(
+    fmap: Any,
+    basemap: Mapping[str, Any],
+    *,
+    permanent_labels: bool = True,
+    street_contrast: str = "normal",
+) -> bool:
     """Add one switchable context layer. Return False when it has no features."""
     import folium
 
     streets = _collection_features(basemap, "streets")
     major = [feature for feature in streets if feature.get("properties", {}).get("rank") == "major"]
     minor = [feature for feature in streets if feature.get("properties", {}).get("rank") != "major"]
+    if street_contrast == "quiet":
+        minor_style = {"color": "#c4c4c4", "weight": 0.8, "opacity": 0.45, "fillOpacity": 0}
+        major_style = {"color": "#8a8a8a", "weight": 1.5, "opacity": 0.6, "fillOpacity": 0}
+    elif street_contrast == "normal":
+        minor_style = {"color": "#8d8d8d", "weight": 1.1, "opacity": 0.85, "fillOpacity": 0}
+        major_style = {"color": "#3d3d3d", "weight": 2.4, "opacity": 0.9, "fillOpacity": 0}
+    else:
+        raise ValueError("street_contrast must be 'normal' or 'quiet'")
     groups = [
         (
             "water",
@@ -186,13 +200,13 @@ def _add_basemap(fmap: Any, basemap: Mapping[str, Any], *, permanent_labels: boo
         (
             "minor streets",
             minor,
-            {"color": "#8d8d8d", "weight": 1.1, "opacity": 0.85, "fillOpacity": 0},
+            minor_style,
             True,
         ),
         (
             "major streets",
             major,
-            {"color": "#3d3d3d", "weight": 2.4, "opacity": 0.9, "fillOpacity": 0},
+            major_style,
             True,
         ),
     ]

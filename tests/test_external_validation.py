@@ -3,6 +3,8 @@
 These tests do not read the Copenhagen extract and do not claim a traffic result.
 """
 
+import ssl
+
 import pytest
 
 from cyclesense.external_validation import (
@@ -16,6 +18,7 @@ from cyclesense.external_validation import (
     distance_to_polyline_m,
     evaluate_extension,
     match_sites,
+    municipal_ssl_context,
     parse_danish_float,
     parse_trafiktal_csv,
     select_sites,
@@ -216,3 +219,9 @@ def test_extension_separates_verified_sites_from_simulated_coverage() -> None:
     assert coverage["budgets"][0]["held_out_marginal_gain"] == pytest.approx(0.25)
     assert "c" not in coverage["existing_edges"]
     assert result["interpretation"]["rank_correlation_reported"] is False
+
+
+def test_municipal_download_keeps_certificate_checks() -> None:
+    context = municipal_ssl_context()
+    assert context.verify_mode == ssl.CERT_REQUIRED
+    assert context.check_hostname is True

@@ -33,6 +33,25 @@ TRAFIKTAL_COLUMNS_URL = (
     "https://admin.opendata.dk/dataset/a8816a15-0609-4e3b-baca-897aedcbc9ac/resource/"
     "3a91cf0c-8366-404b-9e76-36f9ba769988/download/kolonner_dansk_english.xlsx"
 )
+
+
+def municipal_ssl_context():
+    """Verified HTTPS context for the municipal CSV.
+
+    Uses the default trust store, and certifi's bundle when that package is
+    installed. Certificate checks stay on.
+    """
+    import ssl
+
+    context = ssl.create_default_context()
+    try:
+        import certifi
+    except ImportError:
+        return context
+    context.load_verify_locations(cafile=certifi.where())
+    return context
+
+
 TRAFIKTAL_LICENSE = "CC0"
 TRAFIKTAL_PUBLISHER = "Københavns Kommune, Bydata"
 

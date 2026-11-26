@@ -20,7 +20,8 @@ The feasibility graph is the WGS84 rectangle in `configs/pilot.yaml` (west 12.56
 - Column notes: https://admin.opendata.dk/dataset/a8816a15-0609-4e3b-baca-897aedcbc9ac/resource/3a91cf0c-8366-404b-9e76-36f9ba769988/download/kolonner_dansk_english.xlsx
 - What a bicycle value is: `aadt_cykler` is the published annual average daily bicycle traffic. Since 2009 the municipality defines it as the 07:00–19:00 bicycle count in both directions, multiplied by 1.03. It is not a continuous automatic counter and not an origin–destination matrix.
 - Count types used: `Søsnittet` (annual harbour/lake screenline) and `Andre faste tællinger` (fixed sites on a 10-year cycle). `Øvrige tællinger` are one-off project counts and are only a sensitivity. `Krydstællinger` are junction counts and are not matched to a single segment.
-- Local copy: gitignored `data/external/trafiktal.csv`, retrieved 21 November 2026.
+- Local copy: gitignored `data/external/trafiktal.csv`, retrieved 21 November 2026. SHA-256 `d46f3214ee2a4db9c8ff9a9708934fe6c6fbfb8b0f753aa0dd9ba58981a341ad`. The municipality can replace this file. Exact reproduction uses this snapshot, not a later download.
+- The downloader verifies the HTTPS certificate. If verification fails, install `certifi` through the `analysis` extra or the macOS `Install Certificates.command`. Do not disable certificate checks.
 - The comparison itself is documented in `docs/standout_extension.md`. Do not treat a rank correlation, or modeled-route coverage, as observed cyclist coverage.
 
 ## Simulated routes

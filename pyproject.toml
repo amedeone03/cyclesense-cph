@@ -26,6 +26,7 @@ analysis = [
   "pyyaml>=6",
   "osmium>=4",
   "folium>=0.16",
+  "certifi>=2024.0",
 ]
 dev = [
   "pytest>=8.0",
