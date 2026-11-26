@@ -33,7 +33,9 @@ The project is a **simulation-based methods study**. OpenStreetMap geometry is r
 cyclesense-cph/
 ├── .cursor/rules/project.mdc     # Optional Cursor project guidance
 ├── .github/workflows/tests.yml  # CI for pure-Python baseline
-├── configs/pilot.yaml           # Initial experimental configuration
+├── configs/pilot.yaml           # Experimental configuration and seeds
+├── configs/reproducibility.yaml # Snapshot hashes and experiment order
+├── snapshots/trafiktal-2026-11-21.csv  # Frozen CC0 municipal counts
 ├── docs/
 │   ├── research_plan.md         # Hypotheses and evaluation protocol
 │   ├── data_sources.md          # Provenance / limitations
@@ -45,6 +47,7 @@ cyclesense-cph/
 │   ├── integrated_study.md      # Exact versus verified-LSH placement pipelines
 │   ├── route_choice_robustness.md  # Fixed placements on simulated detours
 │   ├── scalability_study.md     # Streaming exact and verified LSH at larger samples
+│   ├── reproducibility.md       # Install, snapshots, and experiment order
 │   ├── standout_extension.md    # Municipal counts and complementary placement
 │   └── research_proposal.pdf    # Updated working proposal
 ├── notebooks/analysis.ipynb     # Reporting notebook starter
@@ -60,6 +63,8 @@ cyclesense-cph/
 ├── scripts/run_scalability_study.py  # Larger nested samples, exact and LSH
 ├── scripts/run_external_validation.py  # Municipal counts and complementary greedy
 ├── scripts/map_standout.py      # Interactive map of the external check
+├── scripts/reproduce.py         # Smoke check or ordered rerun of existing scripts
+├── scripts/validate_results.py  # Consistency checks on saved outputs
 ├── src/cyclesense/
 │   ├── coverage.py              # Exact coverage + greedy baseline
 │   ├── placement.py             # M2 baselines
@@ -75,6 +80,7 @@ cyclesense-cph/
 │   ├── edges.py                 # Physical segment ids and eligibility
 │   ├── network.py               # OSMnx extract, audit, candidates
 │   ├── artifacts.py             # Canonical M1 file locations
+│   ├── reproducibility.py       # Snapshot checks and experiment order
 │   ├── interactive.py           # Folium map of candidates and route samples
 │   ├── sampling.py              # Uniform and commuter-proxy OD draws
 │   └── routes.py                # Shortest paths and calibration split
@@ -102,7 +108,21 @@ For network analysis and interactive notebooks, additionally install:
 pip install -e '.[analysis]'
 ```
 
-The M1 pilot uses the rectangle in `configs/pilot.yaml`. The first run downloads the BBBike Copenhagen OpenStreetMap extract if it is not already in `cache/osm/`, then OSMnx builds and clips the bike graph. That needs the `analysis` extra, including `osmium`:
+Check the checkout before running experiments. Smoke mode does not download data and does not rerun studies:
+
+```bash
+python scripts/reproduce.py --mode smoke
+```
+
+The published experiment order, without the 10,000-route scalability study, is:
+
+```bash
+python scripts/reproduce.py --mode full --skip-heavy
+```
+
+`--skip-heavy` omits `scripts/run_scalability_study.py` only. Integrated LSH and route-choice still run when their outputs are missing. Existing outputs are kept unless you pass `--confirm-overwrite`. The command has been run on a tree that already contains the saved results, where every step was skipped and the consistency checks passed. It has not been run here as a from-scratch rebuild. Data, checksums, and that limitation are in `docs/reproducibility.md`.
+
+The M1 pilot uses the rectangle in `configs/pilot.yaml`. A first build reads `cache/osm/Copenhagen.osm.pbf` and, if that file is absent, downloads the current BBBike Copenhagen extract. That URL is not a frozen historical snapshot. Exact graph reproduction needs the PBF whose SHA-256 is recorded in `configs/reproducibility.yaml`, or the saved GraphML. The build needs the `analysis` extra, including `osmium`:
 
 ```bash
 python scripts/run_m1.py
@@ -231,7 +251,8 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - Municipal counting locations are a recurring count programme, not a confirmed list of permanent sensors.
 - Proposed segments are model selections, not approved installation sites.
 - Calibration numbers, including a popup's incremental gain, are not held-out evidence.
-- The municipal CSV can change. The recorded snapshot hash is the one used for the reported numbers.
+- The municipal WFS file can change. The published comparison uses `snapshots/trafiktal-2026-11-21.csv`.
+- The BBBike Copenhagen URL is a current extract. A new download may not match the recorded PBF hash.
 - The study rectangle cuts off routes at its boundary, so a busy street on the edge can have a high published count and few simulated traversals.
 
 ## Milestones
@@ -244,6 +265,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - [x] **M5**: Final validation of the saved placements, without the graded report
 - [x] **M5.6**: Route-choice sensitivity of the saved placements, without the graded report
 - [x] **M5.7**: Scalability of streaming exact and verified LSH on larger simulated samples, without the graded report
+- [x] **M5.8**: Reproducibility freeze: snapshots, smoke check, and ordered rerun
 
 ## Data management
 

@@ -33,6 +33,7 @@ dev = [
   "ruff>=0.8",
   "networkx>=3.2",
   "folium>=0.16",
+  "pyyaml>=6",
 ]
 
 [tool.setuptools.packages.find]

@@ -105,23 +105,26 @@ def main() -> None:
 
 
 def ensure_counts(path: Path, *, refresh: bool) -> None:
-    if path.is_file() and path.stat().st_size > 0 and not refresh:
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        _download_counts(TRAFIKTAL_CSV_URL, path)
-    except OSError as exc:
-        hint = ""
-        if exc.__class__.__name__ == "SSLCertVerificationError":
-            hint = (
-                " Certificate verification stayed on. Install the analysis extra "
-                "(it includes certifi) or, on a python.org macOS install, run "
-                "Install Certificates.command. Do not disable SSL verification."
-            )
-        raise SystemExit(
-            f"Could not download municipal counts from {TRAFIKTAL_CSV_URL}: {exc}.{hint} "
-            "An exact reproduction uses the recorded local snapshot rather than a later download."
-        ) from exc
+    """Use the frozen municipal snapshot. A live file never replaces a matching snapshot."""
+    from cyclesense.reproducibility import resolve_municipal_file
+
+    def download(url: str, destination: Path) -> None:
+        try:
+            _download_counts(url, destination)
+        except OSError as exc:
+            hint = ""
+            if exc.__class__.__name__ == "SSLCertVerificationError":
+                hint = (
+                    " Certificate verification stayed on. Install the analysis extra "
+                    "(it includes certifi) or, on a python.org macOS install, run "
+                    "Install Certificates.command. Do not disable SSL verification."
+                )
+            raise SystemExit(
+                f"Could not download municipal counts from {url}: {exc}.{hint} "
+                "An exact reproduction uses snapshots/trafiktal-2026-11-21.csv."
+            ) from exc
+
+    resolve_municipal_file(REPO_ROOT, path, refresh=refresh, download=download)
 
 
 def _download_counts(url: str, path: Path) -> None:

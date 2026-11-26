@@ -1,0 +1,50 @@
+# Integrity and workflow only. Seeds, budgets, and scenario names live in
+# configs/pilot.yaml. Do not copy them here.
+
+python_requires: ">=3.11"
+configuration: configs/pilot.yaml
+
+osm:
+  provider: OpenStreetMap
+  access: BBBike Copenhagen extract
+  url: https://download.bbbike.org/osm/bbbike/Copenhagen/Copenhagen.osm.pbf
+  local_path: cache/osm/Copenhagen.osm.pbf
+  sha256: 3661ec97aa60999a911d0824fca03e525f7ec076bbb5c0339f905f0971fa5262
+  last_modified_http: 2026-11-14T16:51:56Z
+  license: ODbL
+  historical_snapshot: unavailable
+  note: >
+    The URL publishes BBBike's current Copenhagen extract. It is not a
+    versioned historical snapshot. A later download can differ from this
+    hash. Exact graph reproduction uses the local PBF with this hash, or
+    the saved GraphML under data/processed/m1/.
+
+municipal:
+  publisher: "Københavns Kommune, Bydata"
+  license: CC0
+  url: "https://wfs-kbhkort.kk.dk/k101/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=k101:trafiktaelling&outputFormat=csv&SRSNAME=EPSG:4326"
+  catalogue: https://www.opendata.dk/city-of-copenhagen/trafiktal
+  retrieved: 2026-11-21
+  local_path: data/external/trafiktal.csv
+  snapshot_path: snapshots/trafiktal-2026-11-21.csv
+  sha256: d46f3214ee2a4db9c8ff9a9708934fe6c6fbfb8b0f753aa0dd9ba58981a341ad
+  note: >
+    The frozen CSV is the file used for the published municipal comparison.
+    A live download from the WFS URL can be a newer inventory. Do not replace
+    the snapshot when the hash differs.
+
+workflow:
+  heavy:
+    - scalability
+  steps:
+    - {id: m1, script: scripts/run_m1.py, sentinel: data/processed/m1/summary.json}
+    - {id: m2, script: scripts/run_m2.py, sentinel: outputs/m2/summary.json}
+    - {id: m3, script: scripts/run_m3.py, sentinel: outputs/m3/summary.json}
+    - {id: m4, script: scripts/run_m4.py, sentinel: outputs/m4/summary.json}
+    - {id: m5, script: scripts/run_m5.py, sentinel: outputs/m5/summary.json}
+    - {id: municipal, script: scripts/run_external_validation.py, sentinel: outputs/standout/summary.json}
+    - {id: integrated, script: scripts/run_integrated_study.py, sentinel: outputs/integrated/summary.json}
+    - {id: route_choice, script: scripts/run_route_choice_study.py, sentinel: outputs/route_choice/summary.json}
+    - {id: scalability, script: scripts/run_scalability_study.py, sentinel: outputs/scalability/summary.json}
+    - {id: map_m1, script: scripts/map_m1.py, sentinel: outputs/m1/m1_network.html}
+    - {id: map_standout, script: scripts/map_standout.py, sentinel: outputs/standout/standout_counters.html}

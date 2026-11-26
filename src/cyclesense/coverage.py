@@ -6,9 +6,9 @@ not model real Copenhagen traffic.
 """
 
 from collections import defaultdict
+from collections.abc import Hashable, Iterable, Mapping
 from dataclasses import dataclass
 from math import isfinite
-from typing import Hashable, Iterable, Mapping
 
 Edge = Hashable
 RouteId = str

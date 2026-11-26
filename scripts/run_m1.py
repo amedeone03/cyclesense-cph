@@ -396,7 +396,14 @@ def run(config_path: Path, *, force_download: bool) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the CycleSense M1 network and route pilot")
     parser.add_argument("--config", type=Path, default=REPO_ROOT / "configs" / "pilot.yaml")
-    parser.add_argument("--force-download", action="store_true", help="Ignore a saved graph and query Overpass again")
+    parser.add_argument(
+        "--force-download",
+        action="store_true",
+        help=(
+            "Re-download the BBBike Copenhagen PBF and rebuild the graph. "
+            "That URL is a current extract, so a new file may not match the recorded snapshot."
+        ),
+    )
     args = parser.parse_args()
     summary = run(args.config, force_download=args.force_download)
     graph = summary["graph"]
