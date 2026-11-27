@@ -35,6 +35,7 @@ dev = [
   "folium>=0.16",
   "pyyaml>=6",
   "scipy>=1.11",
+  "matplotlib>=3.8",
 ]
 
 [tool.setuptools.packages.find]
