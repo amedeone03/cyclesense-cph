@@ -75,7 +75,7 @@ def test_manifest_parses_and_keeps_step_order() -> None:
     assert ids.index("municipal") < ids.index("integrated") < ids.index("scalability")
     assert steps[-1].id == "map_standout"
     heavy = [step.id for step in steps if step.heavy]
-    assert heavy == ["exact_optimization", "scalability"]
+    assert heavy == ["exact_optimization", "placement_stability", "scalability"]
 
 
 def test_skip_heavy_omits_the_large_benchmarks() -> None:
@@ -83,6 +83,7 @@ def test_skip_heavy_omits_the_large_benchmarks() -> None:
     kept = [step.id for step in selected_steps(steps, skip_heavy=True)]
     assert "scalability" not in kept
     assert "exact_optimization" not in kept
+    assert "placement_stability" not in kept
     assert "integrated" in kept
     assert "route_choice" in kept
 

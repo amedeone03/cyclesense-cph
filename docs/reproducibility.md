@@ -71,10 +71,11 @@ Full mode runs the existing scripts in this order:
 8. `scripts/run_route_choice_study.py`
 9. `scripts/run_robust_placement.py`
 10. `scripts/run_exact_optimization.py` (heavy)
-11. `scripts/run_scalability_study.py` (heavy)
-12. `scripts/map_m1.py`
-13. `scripts/map_standout.py`
-14. `scripts/validate_results.py`
+11. `scripts/run_placement_stability.py` (heavy)
+12. `scripts/run_scalability_study.py` (heavy)
+13. `scripts/map_m1.py`
+14. `scripts/map_standout.py`
+15. `scripts/validate_results.py`
 
 A step whose output file already exists is skipped. Pass `--confirm-overwrite` to rerun it. That flag can replace saved results because the runners write to fixed paths. There is no separate output directory.
 
@@ -82,7 +83,7 @@ A step whose output file already exists is skipped. Pass `--confirm-overwrite` t
 python scripts/reproduce.py --mode full --skip-heavy
 ```
 
-`--skip-heavy` skips steps 10 and 11: the exact MILP benchmark and the nested 500 to 10,000 route scalability study. Integrated LSH, route-choice, and robust placement still run when their outputs are absent. Smoke mode does not solve any MILP. On this machine the integrated study took several minutes, the scalability study took about 17 minutes, the robust-placement study took about 36 seconds once the saved graph was loaded, and the exact benchmark took about 28 seconds. A from-scratch M1 build also needs the OSM extract and a network connection the first time the PBF is fetched.
+`--skip-heavy` skips steps 10–12: the exact MILP benchmark, the placement-stability resampling, and the nested 500 to 10,000 route scalability study. Integrated LSH, route-choice, and robust placement still run when their outputs are absent. Smoke mode does not solve a MILP or draw new calibration samples. On this machine the integrated study took several minutes, the scalability study took about 17 minutes, the robust-placement study took about 36 seconds once the saved graph was loaded, the exact benchmark took about 28 seconds, and the stability study took about 4 minutes. A from-scratch M1 build also needs the OSM extract and a network connection the first time the PBF is fetched.
 
 This repository was not rebuilt from an empty `data/` and `outputs/` tree during the reproducibility freeze. The smoke check and `python scripts/validate_results.py` were run against the saved artifacts. Full mode on that tree skips every step that already has an output.
 
@@ -91,7 +92,7 @@ python scripts/validate_results.py
 python scripts/validate_results.py --allow-missing scalability
 ```
 
-The validator checks relationships: disjoint M1 splits, coverage in 0–1, M4 lambda 0 matching M2 greedy, M3 acceptance, integrated edge accounting, route-choice detour caps, scalability rows that are either measured or explicitly not measured, the municipal snapshot hash, and, when an exact-optimization summary is present, that a time-limited MILP row is not marked proven. It does not recompute the published percentages. Numerical comparisons of saved coverage use exact equality of the stored values. Detour caps allow `1e-9` so a binary floating-point value on the cap is not rejected. No other tolerance is used.
+The validator checks relationships: disjoint M1 splits, coverage in 0–1, M4 lambda 0 matching M2 greedy, M3 acceptance, integrated edge accounting, route-choice detour caps, scalability rows that are either measured or explicitly not measured, the municipal snapshot hash, when an exact-optimization summary is present, that a time-limited MILP row is not marked proven, and, when a placement-stability summary is present, that its replicates are new calibration draws and that held-out routes were not used for selection. It does not recompute the published percentages. Numerical comparisons of saved coverage use exact equality of the stored values. Detour caps allow `1e-9` so a binary floating-point value on the cap is not rejected. No other tolerance is used.
 
 ## What can run offline
 

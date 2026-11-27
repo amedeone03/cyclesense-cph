@@ -285,6 +285,8 @@ def validate_outputs(root: Path, *, allow_missing: set[str] | None = None) -> tu
         errors.extend(_check_robust_placement(root))
     if (root / "outputs/exact_optimization/summary.json").is_file():
         errors.extend(_check_exact_optimization(root))
+    if (root / "outputs/placement_stability/summary.json").is_file():
+        errors.extend(_check_placement_stability(root))
     return errors, notes
 
 
@@ -463,6 +465,20 @@ def _check_route_choice(root: Path) -> list[str]:
                 break
     if not limits:
         errors.append("route-choice diagnostics have no detour limits")
+    return errors
+
+
+def _check_placement_stability(root: Path) -> list[str]:
+    summary = json.loads((root / "outputs/placement_stability/summary.json").read_text(encoding="utf-8"))
+    errors = []
+    if summary.get("routes_are_simulated") is not True:
+        errors.append("placement stability summary does not mark routes as simulated")
+    if summary.get("held_out_used_for_selection") is not False:
+        errors.append("placement stability used held-out routes for selection")
+    if summary.get("replicates_are_independent_od_draws") is not True:
+        errors.append("placement stability does not identify its replicates as new OD draws")
+    if int(summary.get("n_replicates") or 0) < 2:
+        errors.append("placement stability summary has fewer than two replicates")
     return errors
 
 

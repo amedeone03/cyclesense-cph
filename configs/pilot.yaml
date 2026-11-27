@@ -194,6 +194,19 @@ exact_optimization:
   municipal_additions: 5
   scenarios: [uniform, commuter_proxy]
 
+# M5.11 independent calibration draws. Seeds stay disjoint from M1 and M5.9.
+# The unused evaluation offset satisfies the generator without creating held-out routes.
+placement_stability:
+  replicate_seed_start: 103000
+  n_replicates: 30
+  calibration_routes: 500
+  budgets: [10, 20]
+  pooled_k: 10
+  scenarios: [uniform, commuter_proxy]
+  unused_evaluation_offset: 1000003
+  include_route_choice: true
+  route_choice_seed_start: 113000
+
 notes: >
   M1 pilot parameters. The rectangle above is the exact study boundary.
   Uniform and commuter-proxy draws are simulated routes, not bicycle counts.
@@ -213,3 +226,5 @@ notes: >
   refit M2 or M4, and it does not read held-out routes while selecting.
   scripts/run_exact_optimization.py reads exact_optimization. It does not
   refit greedy placements or use held-out routes inside the MILP.
+  scripts/run_placement_stability.py reads placement_stability. It does not
+  overwrite the canonical routes or select counters from held-out routes.
