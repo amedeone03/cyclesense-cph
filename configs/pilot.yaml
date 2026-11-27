@@ -207,6 +207,16 @@ placement_stability:
   include_route_choice: true
   route_choice_seed_start: 113000
 
+# M5.13 mapped-infrastructure policies. Classes were fixed from the saved tags
+# before held-out scores. Unknown segments stay out of the restricted policies.
+infrastructure:
+  time_limit_seconds: 120
+  mip_rel_gap: 1.0e-6
+  budgets: [5, 10, 20]
+  municipal_additions: 5
+  scenarios: [uniform, commuter_proxy]
+  policies: [unrestricted, explicit_facility, dedicated]
+
 notes: >
   M1 pilot parameters. The rectangle above is the exact study boundary.
   Uniform and commuter-proxy draws are simulated routes, not bicycle counts.

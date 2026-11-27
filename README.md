@@ -142,6 +142,12 @@ Placement stability redraws calibration routes. It does not overwrite the canoni
 python scripts/run_placement_stability.py
 ```
 
+Mapped-infrastructure policies reuse the same greedy and MILP selectors on a smaller candidate set:
+
+```bash
+python scripts/run_infrastructure_study.py
+```
+
 The planner reads those saved results and writes one local page. It does not place counters or recompute coverage:
 
 ```bash
@@ -273,6 +279,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - With the OD pairs and counter IDs held fixed, short simulated detours lower K = 10 coverage by about 7–8 percentage points in the uniform scenario and about 3–4 in the commuter scenario. At K = 20 the drop is about 4–5 points. Greedy usually stays ahead of the lambda-0.25 placement. The wider 30% cap adds little beyond the 15% cap, because most accepted detours are already shorter than 15%.
 - On a nested uniform sample, verified LSH with 32 permutations and 16×2 bands keeps about 99.6% of the exact Jaccard edges from 500 to 10,000 routes and is about eight times faster than streaming exact at 10,000 routes. Streaming exact uses less Python-tracked memory at every size. The ten selected counters still change as the sample grows.
 - A shared greedy set trained on shortest paths and 15% calibration detours does not improve held-out coverage under alternative routes. At K=10 it keeps 9 of the 10 pooled shortest-path counters. On fresh seeds it is about one point lower on uniform alternatives and about one point higher on commuter alternatives. Its shortest-path coverage is lower, especially for uniform routes (69.6% against 72.8% for the uniform greedy). Details are in `docs/robust_placement.md`.
+- Requiring a mapped cycling facility keeps 381 of 1,047 candidates and lowers held-out coverage by a few points. Limiting the search to the 107 dedicated cycleways moves the counters and cuts held-out coverage by about 30–47 points. Details are in `docs/infrastructure_constraints.md`.
 
 ## Limitations
 
@@ -284,6 +291,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - The municipal WFS file can change. The published comparison uses `snapshots/trafiktal-2026-11-21.csv`.
 - The BBBike Copenhagen URL is a current extract. A new download may not match the recorded PBF hash.
 - The study rectangle cuts off routes at its boundary, so a busy street on the edge can have a high published count and few simulated traversals.
+- A missing cycleway tag is not evidence that cycling infrastructure is absent. The infrastructure policies use only tags stored on the saved graph.
 
 ## Milestones
 
@@ -300,6 +308,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - [x] **M5.10**: Exact MILP benchmark of the coverage objective. Greedy matches the optimum at K=5 and K=10; a higher calibration value does not consistently raise held-out coverage
 - [x] **M5.11**: Stability of greedy locations across 30 independent calibration draws. One bridge segment is selected every time; whole K=10 sets are not
 - [x] **M5.12**: Interactive planner over the saved placements. Missing evaluations stay blank
+- [x] **M5.13**: Mapped-infrastructure candidate policies. See `docs/infrastructure_constraints.md`
 
 ## Data management
 

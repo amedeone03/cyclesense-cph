@@ -51,5 +51,6 @@ workflow:
     - {id: exact_optimization, script: scripts/run_exact_optimization.py, sentinel: outputs/exact_optimization/summary.json}
     - {id: placement_stability, script: scripts/run_placement_stability.py, sentinel: outputs/placement_stability/summary.json}
     - {id: scalability, script: scripts/run_scalability_study.py, sentinel: outputs/scalability/summary.json}
+    - {id: infrastructure, script: scripts/run_infrastructure_study.py, sentinel: outputs/infrastructure/summary.json}
     - {id: map_m1, script: scripts/map_m1.py, sentinel: outputs/m1/m1_network.html}
     - {id: map_standout, script: scripts/map_standout.py, sentinel: outputs/standout/standout_counters.html}

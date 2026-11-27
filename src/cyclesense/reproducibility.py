@@ -287,6 +287,8 @@ def validate_outputs(root: Path, *, allow_missing: set[str] | None = None) -> tu
         errors.extend(_check_exact_optimization(root))
     if (root / "outputs/placement_stability/summary.json").is_file():
         errors.extend(_check_placement_stability(root))
+    if (root / "outputs/infrastructure/summary.json").is_file():
+        errors.extend(_check_infrastructure(root))
     return errors, notes
 
 
@@ -479,6 +481,20 @@ def _check_placement_stability(root: Path) -> list[str]:
         errors.append("placement stability does not identify its replicates as new OD draws")
     if int(summary.get("n_replicates") or 0) < 2:
         errors.append("placement stability summary has fewer than two replicates")
+    return errors
+
+
+def _check_infrastructure(root: Path) -> list[str]:
+    summary = json.loads((root / "outputs/infrastructure/summary.json").read_text(encoding="utf-8"))
+    errors = []
+    if summary.get("routes_are_simulated") is not True:
+        errors.append("infrastructure summary does not mark routes as simulated")
+    if summary.get("held_out_used_for_selection") is not False:
+        errors.append("infrastructure study used held-out routes for selection")
+    if int(summary.get("n_eligible_candidates") or 0) != 1047:
+        errors.append("infrastructure study did not keep the 1,047 eligible segments")
+    if summary.get("unrestricted_matches_m2") is not True:
+        errors.append("unrestricted infrastructure placement does not match M2 greedy")
     return errors
 
 
