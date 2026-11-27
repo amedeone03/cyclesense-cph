@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CycleSense planner</title>
+<style>
+  :root {
+    --paper: #f4f1ea;
+    --ink: #1c1915;
+    --muted: #5c564c;
+    --line: #d9d2c5;
+    --panel: #fbf9f4;
+    --selected: #0b6e4f;
+    --municipal: #163e72;
+    --added: #b4532a;
+    --shared: #5c4d7a;
+    --focus: #0b6e4f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.4;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    align-items: end;
+    padding: 0.85rem 1.1rem 0.7rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .kicker { margin: 0; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.72rem; color: var(--muted); }
+  h1 { margin: 0.1rem 0 0; font-size: 1.35rem; font-weight: 600; }
+  .lede { margin: 0; max-width: 36rem; color: var(--muted); font-size: 0.92rem; }
+  .layout { display: grid; grid-template-columns: 22.5rem minmax(0, 1fr); height: calc(100% - 4.4rem); min-width: 0; }
+  aside {
+    overflow: auto;
+    padding: 0.85rem 1rem 1.4rem;
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+  }
+  main { position: relative; min-width: 0; min-height: 16rem; overflow: hidden; }
+  canvas { width: 100%; height: 100%; display: block; background: #f7f5f0; cursor: grab; }
+  canvas.dragging { cursor: grabbing; }
+  .modes { display: flex; gap: 0.35rem; margin-bottom: 0.8rem; }
+  .modes button, button.quiet {
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 0.28rem 0.7rem;
+    font: inherit;
+    cursor: pointer;
+  }
+  .modes button[aria-pressed="true"] { background: var(--ink); color: #f7f4ee; border-color: var(--ink); }
+  label { display: block; margin: 0.55rem 0 0; font-size: 0.78rem; color: var(--muted); }
+  select, button.quiet { font: inherit; color: var(--ink); }
+  select {
+    display: block;
+    width: 100%;
+    margin-top: 0.18rem;
+    padding: 0.38rem 0.45rem;
+    border: 1px solid var(--line);
+    border-radius: 0.35rem;
+    background: white;
+  }
+  .check { display: flex; align-items: center; gap: 0.45rem; margin: 0.75rem 0 0.2rem; color: var(--ink); font-size: 0.92rem; }
+  .note { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.82rem; }
+  .panel { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--line); }
+  .panel h2 { margin: 0 0 0.4rem; font-size: 0.95rem; }
+  dl { margin: 0; }
+  dt { margin-top: 0.55rem; color: var(--muted); font-size: 0.75rem; }
+  dd { margin: 0; overflow-wrap: anywhere; }
+  .missing { color: var(--muted); }
+  details { margin-top: 0.9rem; font-size: 0.84rem; color: var(--muted); }
+  details p { margin: 0.35rem 0; }
+  .legend {
+    position: absolute;
+    left: 0.7rem;
+    bottom: 0.7rem;
+    max-width: min(24rem, calc(100% - 1.4rem));
+    background: rgba(251, 249, 244, 0.94);
+    border: 1px solid var(--line);
+    border-radius: 0.45rem;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.78rem;
+  }
+  .legend div { display: flex; align-items: center; gap: 0.4rem; margin: 0.12rem 0; }
+  .swatch { width: 1.1rem; height: 0.28rem; border-radius: 99px; flex: none; }
+  .credit { margin: 0.25rem 0 0; color: var(--muted); }
+  #popup {
+    position: absolute;
+    z-index: 2;
+    width: min(18rem, calc(100% - 1.2rem));
+    background: #fbf9f4;
+    border: 1px solid var(--line);
+    border-radius: 0.45rem;
+    padding: 0.55rem 0.65rem 0.65rem;
+    box-shadow: 0 8px 24px rgba(28, 25, 21, 0.08);
+  }
+  #popup h3 { margin: 0 0 0.15rem; font-size: 0.95rem; }
+  #popup .edge-id { margin: 0 0 0.4rem; color: var(--muted); font-size: 0.75rem; overflow-wrap: anywhere; }
+  #popup button { float: right; border: 0; background: transparent; font: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  @media (max-width: 860px) {
+    header { flex-direction: column; align-items: start; gap: 0.35rem; }
+    .layout { grid-template-columns: 1fr; grid-template-rows: minmax(16rem, 48vh) auto; height: auto; }
+    main { order: -1; height: 48vh; }
+    aside { order: 1; border-right: 0; border-top: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <p class="kicker">CycleSense CPH · DTU 02807</p>
+    <h1>Counter planner</h1>
+  </div>
+  <p class="lede">Simulated routes on mapped Copenhagen streets. Coverage is the share of those routes that meet a selected segment.</p>
+</header>
+<div class="layout">
+  <aside>
+    <div class="modes" role="group" aria-label="Planner mode">
+      <button type="button" id="mode-research" aria-pressed="true">Research</button>
+      <button type="button" id="mode-compare" aria-pressed="false">Compare</button>
+      <button type="button" id="mode-municipal" aria-pressed="false">Municipal</button>
+    </div>
+    <div id="research-controls">
+      <label>Placement method<select id="method"></select></label>
+      <label>Training scenario<select id="training"></select></label>
+      <label>Counter budget<select id="budget"></select></label>
+      <label>Evaluation scenario<select id="evaluation">
+        <option value="uniform">Uniform</option>
+        <option value="commuter_proxy">Commuter proxy</option>
+      </select></label>
+      <label>Evaluation condition<select id="condition">
+        <option value="shortest">Held-out shortest paths</option>
+        <option value="detour_15">Alternative routes, 15% cap</option>
+        <option value="detour_30">Alternative routes, 30% cap</option>
+      </select></label>
+      <label class="check"><input id="stability" type="checkbox"> Show selection stability</label>
+      <p id="snap" class="note" hidden></p>
+    </div>
+    <div id="compare-controls" hidden>
+      <label>Method A<select id="method-a"></select></label>
+      <label>Training scenario A<select id="training-a"></select></label>
+      <label>Method B<select id="method-b"></select></label>
+      <label>Training scenario B<select id="training-b"></select></label>
+      <label>Counter budget<select id="budget-compare"></select></label>
+      <label>Evaluation scenario<select id="evaluation-compare">
+        <option value="uniform">Uniform</option>
+        <option value="commuter_proxy">Commuter proxy</option>
+      </select></label>
+      <label>Evaluation condition<select id="condition-compare">
+        <option value="shortest">Held-out shortest paths</option>
+        <option value="detour_15">Alternative routes, 15% cap</option>
+        <option value="detour_30">Alternative routes, 30% cap</option>
+      </select></label>
+    </div>
+    <div id="municipal-controls" hidden>
+      <label>Addition scenario<select id="municipal-scenario">
+        <option value="uniform">Uniform</option>
+        <option value="commuter_proxy">Commuter proxy</option>
+      </select></label>
+      <label>Published sites and additions<select id="municipal-plan"></select></label>
+      <label>Evaluation scenario<select id="evaluation-municipal">
+        <option value="uniform">Uniform</option>
+        <option value="commuter_proxy">Commuter proxy</option>
+      </select></label>
+      <label>Evaluation condition<select id="condition-municipal">
+        <option value="shortest">Held-out shortest paths</option>
+        <option value="detour_15">Alternative routes, 15% cap</option>
+        <option value="detour_30">Alternative routes, 30% cap</option>
+      </select></label>
+      <p class="note">These are published recurring counting locations, not confirmed installed sensors. Added segments are proposals.</p>
+    </div>
+    <section class="panel" aria-live="polite">
+      <h2 id="panel-title">Selected placement</h2>
+      <dl id="facts"></dl>
+    </section>
+    <details>
+      <summary>How to read these numbers</summary>
+      <div id="method-notes"></div>
+    </details>
+  </aside>
+  <main>
+    <canvas id="map" aria-label="Copenhagen cycling network and selected counter segments"></canvas>
+    <div id="legend" class="legend"></div>
+    <div id="popup" hidden>
+      <button type="button" id="popup-close" aria-label="Close">×</button>
+      <h3 id="popup-name"></h3>
+      <p id="popup-id" class="edge-id"></p>
+      <dl id="popup-facts"></dl>
+    </div>
+  </main>
+</div>
+<script id="planner-data" type="application/json"><!-- PLANNER_DATA --></script>
+<script>
+const data = JSON.parse(document.getElementById("planner-data").textContent);
+const byId = Object.fromEntries(data.placements.map((item) => [item.id, item]));
+const geometry = Object.fromEntries(data.network.map((item) => [item.id, item]));
+const municipalIds = new Set(data.municipal.existing_ids);
+const methods = [
+  ["greedy", "Standard greedy"],
+  ["route_frequency", "Route frequency"],
+  ["geographical_kmeans", "Geographic K-Means (seed 42)"],
+  ["balanced", "Community-balanced greedy"],
+  ["pooled", "Pooled shortest-path greedy"],
+  ["route_choice", "Route-choice-augmented greedy"],
+  ["milp", "Certified MILP optimum"]
+];
+const scenarioName = {uniform: "Uniform", commuter_proxy: "Commuter proxy", both: "Both scenarios"};
+const state = {
+  mode: "research",
+  method: "greedy",
+  training: "uniform",
+  budget: 10,
+  scenarioTraining: "uniform",
+  evaluation: "uniform",
+  condition: "shortest",
+  stability: false,
+  methodA: "greedy",
+  trainingA: "uniform",
+  methodB: "milp",
+  trainingB: "uniform",
+  budgetCompare: 10,
+  evaluationCompare: "uniform",
+  conditionCompare: "shortest",
+  municipalKind: "26",
+  municipalScenario: "uniform",
+  evaluationMunicipal: "uniform",
+  conditionMunicipal: "shortest"
+};
+
+const canvas = document.getElementById("map");
+const context = canvas.getContext("2d");
+let bounds = null;
+let camera = {cx: 0, cy: 0, scale: 1};
+let drag = null;
+
+function placementsFor(method, training) {
+  return data.placements.filter((item) => item.method === method && item.training_scenario === training);
+}
+
+function trainingChoices(method) {
+  const order = ["uniform", "commuter_proxy", "both"];
+  const values = [...new Set(data.placements.filter((item) => item.method === method).map((item) => item.training_scenario))];
+  return values.sort((left, right) => order.indexOf(left) - order.indexOf(right));
+}
+
+function resolveTraining(available) {
+  if (available.length === 1) return available[0];
+  if (available.includes(state.scenarioTraining)) return state.scenarioTraining;
+  return available[0];
+}
+
+function findPlacement(method, training, budget) {
+  return byId[method + ":" + training + ":" + budget] || null;
+}
+
+function fillSelect(select, options, selected) {
+  select.innerHTML = "";
+  options.forEach(([value, label]) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    option.selected = value === selected;
+    select.appendChild(option);
+  });
+}
+
+function syncResearch() {
+  const training = trainingChoices(state.method);
+  state.training = resolveTraining(training);
+  if (state.training !== "both") state.scenarioTraining = state.training;
+  fillSelect(document.getElementById("method"), methods, state.method);
+  fillSelect(document.getElementById("training"), training.map((value) => [value, scenarioName[value]]), state.training);
+  document.getElementById("training").disabled = training.length === 1;
+  const budgets = placementsFor(state.method, state.training).map((item) => item.budget).sort((a, b) => a - b);
+  const snap = document.getElementById("snap");
+  if (!budgets.includes(state.budget)) {
+    const next = budgets.includes(10) ? 10 : budgets[0];
+    snap.hidden = false;
+    snap.textContent = "Saved results for this method use K = " + budgets.join(", ") + ". The budget moved to " + next + ".";
+    state.budget = next;
+  } else snap.hidden = true;
+  fillSelect(document.getElementById("budget"), budgets.map((value) => [String(value), "K = " + value]), String(state.budget));
+  document.getElementById("evaluation").value = state.evaluation;
+  document.getElementById("condition").value = state.condition;
+  document.getElementById("stability").checked = state.stability;
+}
+
+function syncCompare() {
+  fillSelect(document.getElementById("method-a"), methods, state.methodA);
+  fillSelect(document.getElementById("method-b"), methods, state.methodB);
+  const trainA = trainingChoices(state.methodA);
+  const trainB = trainingChoices(state.methodB);
+  if (!trainA.includes(state.trainingA)) state.trainingA = trainA.includes("uniform") ? "uniform" : trainA[0];
+  if (!trainB.includes(state.trainingB)) state.trainingB = trainB.includes("uniform") ? "uniform" : trainB[0];
+  fillSelect(document.getElementById("training-a"), trainA.map((value) => [value, scenarioName[value]]), state.trainingA);
+  fillSelect(document.getElementById("training-b"), trainB.map((value) => [value, scenarioName[value]]), state.trainingB);
+  document.getElementById("training-a").disabled = trainA.length === 1;
+  document.getElementById("training-b").disabled = trainB.length === 1;
+  const left = placementsFor(state.methodA, state.trainingA).map((item) => item.budget);
+  const right = placementsFor(state.methodB, state.trainingB).map((item) => item.budget);
+  const budgets = left.filter((value) => right.includes(value)).sort((a, b) => a - b);
+  if (!budgets.includes(state.budgetCompare)) state.budgetCompare = budgets.includes(10) ? 10 : budgets[0];
+  fillSelect(document.getElementById("budget-compare"), budgets.map((value) => [String(value), "K = " + value]), String(state.budgetCompare));
+  document.getElementById("evaluation-compare").value = state.evaluationCompare;
+  document.getElementById("condition-compare").value = state.conditionCompare;
+}
+
+function syncMunicipal() {
+  const kinds = [
+    ["26", "26 verified counting sites"],
+    ["original5", "26 + 5 greedy additions"],
+    ["robust5", "26 + 5 route-choice additions"],
+    ["milp5", "26 + 5 certified MILP additions"],
+    ["original10", "26 + 10 greedy additions"]
+  ];
+  fillSelect(document.getElementById("municipal-plan"), kinds.map(([value, label]) => [value, label + " · " + scenarioName[state.municipalScenario]]), state.municipalKind);
+  document.getElementById("evaluation-municipal").value = state.evaluationMunicipal;
+  document.getElementById("condition-municipal").value = state.conditionMunicipal;
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  ["research", "compare", "municipal"].forEach((name) => {
+    document.getElementById("mode-" + name).setAttribute("aria-pressed", String(name === mode));
+    document.getElementById(name + "-controls").hidden = name !== mode;
+  });
+  if (mode !== "research") state.stability = false;
+  render();
+}
+
+function percent(value) {
+  return (value * 100).toFixed(1) + "% of simulated routes";
+}
+
+function points(value) {
+  const amount = value * 100;
+  const sign = amount > 0 ? "+" : "";
+  return sign + amount.toFixed(1) + " percentage points";
+}
+
+function metricText(metric) {
+  if (!metric) return null;
+  let text = percent(metric.value);
+  if (metric.kind === "seed_mean") {
+    text += ". Mean of " + metric.n_seeds + " perturbed draws (spread " + (metric.std * 100).toFixed(1) + " points). This is seed-to-seed variability, not a confidence interval.";
+  }
+  if (!text.endsWith(".")) text += ".";
+  return text + " Source: " + metric.source + ".";
+}
+
+function segmentCount(count) {
+  return count + (count === 1 ? " segment" : " segments");
+}
+
+function fact(pairs) {
+  const list = document.getElementById("facts");
+  list.innerHTML = "";
+  pairs.forEach(([term, detail, missing]) => {
+    const dt = document.createElement("dt");
+    dt.textContent = term;
+    const dd = document.createElement("dd");
+    dd.textContent = detail;
+    if (missing) dd.className = "missing";
+    list.appendChild(dt);
+    list.appendChild(dd);
+  });
+}
+
+const notEvaluated = "Not evaluated for this combination";
+
+function researchPanel() {
+  const placement = findPlacement(state.method, state.training, state.budget);
+  document.getElementById("panel-title").textContent = placement.method_label;
+  const key = state.evaluation + "|" + state.condition;
+  const metric = placement.evaluations[key];
+  const rows = [
+    ["Method", placement.certified_optimal ? placement.method_label + ". Certified for the calibration objective." : placement.method_label],
+    ["Training", placement.training_label],
+    ["Evaluation", scenarioName[state.evaluation]],
+    ["Budget", "K = " + placement.budget],
+    ["Selected", placement.edges.length + " physical segments"],
+    ["Held-out coverage", metric ? metricText(metric) : notEvaluated, !metric],
+    ["Calibration", placement.calibration ? percent(placement.calibration.value) + ". " + placement.calibration.label + "." : notEvaluated, !placement.calibration]
+  ];
+  if (placement.heldout_baseline) {
+    const baseline = byId[placement.heldout_baseline];
+    const baseMetric = baseline && baseline.evaluations[key];
+    if (metric && baseMetric) {
+      rows.push(["Difference", points(metric.value - baseMetric.value) + " versus " + placement.baseline_label + ", on this evaluation."]);
+    } else rows.push(["Difference", notEvaluated, true]);
+    if (placement.calibration && baseline && baseline.calibration && placement.objective === baseline.objective) {
+      rows.push(["Objective gap", points(placement.calibration.value - baseline.calibration.value) + " on the shared calibration objective."]);
+    }
+  } else rows.push(["Difference", "This placement is the reference for its training objective."]);
+  const table = placement.stability_key ? data.stability[placement.stability_key] : null;
+  if (state.stability && table) {
+    const values = placement.edges.map((edge) => table.frequencies[edge.id] || 0);
+    const low = Math.min(...values), high = Math.max(...values);
+    rows.push(["Stability", "Selected segments appear in " + (low * 100).toFixed(0) + "–" + (high * 100).toFixed(0) + "% of " + table.n_replicates + " calibration draws. Frequency is not cyclist demand."]);
+  } else if (state.stability) rows.push(["Stability", notEvaluated, true]);
+  rows.push(["Source", placement.source]);
+  fact(rows);
+  return placement;
+}
+
+function compareSets(left, right) {
+  const first = new Set(left.map((edge) => edge.id));
+  const second = new Set(right.map((edge) => edge.id));
+  const shared = [...first].filter((id) => second.has(id)).sort();
+  const onlyLeft = [...first].filter((id) => !second.has(id)).sort();
+  const onlyRight = [...second].filter((id) => !first.has(id)).sort();
+  const union = new Set([...first, ...second]);
+  return {shared, onlyLeft, onlyRight, jaccard: union.size ? shared.length / union.size : 1};
+}
+
+function comparePanel() {
+  const left = findPlacement(state.methodA, state.trainingA, state.budgetCompare);
+  const right = findPlacement(state.methodB, state.trainingB, state.budgetCompare);
+  document.getElementById("panel-title").textContent = "Method comparison";
+  if (!left || !right) {
+    fact([["Comparison", notEvaluated, true]]);
+    return {left, right, overlap: null};
+  }
+  const overlap = compareSets(left.edges, right.edges);
+  const key = state.evaluationCompare + "|" + state.conditionCompare;
+  const leftMetric = left.evaluations[key];
+  const rightMetric = right.evaluations[key];
+  const rows = [
+    ["Method A", left.method_label + " · " + left.training_label],
+    ["Method B", right.method_label + " · " + right.training_label],
+    ["Budget", "K = " + state.budgetCompare],
+    ["Shared", segmentCount(overlap.shared.length)],
+    ["Only A", segmentCount(overlap.onlyLeft.length)],
+    ["Only B", segmentCount(overlap.onlyRight.length)],
+    ["Jaccard", overlap.jaccard.toFixed(2) + " of the union of physical-edge ids"]
+  ];
+  if (leftMetric && rightMetric) rows.push(["Held-out difference", points(leftMetric.value - rightMetric.value) + ". A minus B on this evaluation."]);
+  else rows.push(["Held-out difference", notEvaluated, true]);
+  if (left.calibration && right.calibration && left.objective === right.objective && left.training_scenario === right.training_scenario) {
+    rows.push(["Objective difference", points(left.calibration.value - right.calibration.value) + " on " + left.objective_label + "."]);
+  } else rows.push(["Objective difference", "The training objectives are different, so their calibration values are not subtracted."]);
+  fact(rows);
+  return {left, right, overlap};
+}
+
+function municipalPanel() {
+  const plan = data.municipal.plans.find((item) => item.id === "municipal:" + state.municipalScenario + ":" + state.municipalKind);
+  document.getElementById("panel-title").textContent = plan.label;
+  const key = state.evaluationMunicipal + "|" + state.conditionMunicipal;
+  const metric = plan.evaluations[key];
+  fact([
+    ["Plan", plan.certified_optimal ? plan.label + ". Additions are certified for the calibration objective." : plan.label],
+    ["Training", plan.training],
+    ["Evaluation", scenarioName[state.evaluationMunicipal]],
+    ["Municipal sites", plan.existing.length + " published locations"],
+    ["Additions", plan.added.length + " proposed segments"],
+    ["Held-out coverage", metric ? metricText(metric) : notEvaluated, !metric],
+    ["Calibration", plan.calibration ? percent(plan.calibration.value) + ". " + plan.calibration.label + "." : notEvaluated, !plan.calibration],
+    ["Source", plan.source]
+  ]);
+  return plan;
+}
+
+function renderPanel() {
+  if (state.mode === "compare") return comparePanel();
+  if (state.mode === "municipal") return municipalPanel();
+  return researchPanel();
+}
+
+function boundsOf() {
+  let west = Infinity, east = -Infinity, south = Infinity, north = -Infinity;
+  data.network.forEach((edge) => edge.line.forEach(([lon, lat]) => {
+    west = Math.min(west, lon); east = Math.max(east, lon);
+    south = Math.min(south, lat); north = Math.max(north, lat);
+  }));
+  const mid = (south + north) / 2;
+  return {west, east, south, north, cos: Math.cos(mid * Math.PI / 180)};
+}
+
+function fit() {
+  const width = canvas.clientWidth, height = canvas.clientHeight;
+  const spanX = (bounds.east - bounds.west) * bounds.cos;
+  const spanY = bounds.north - bounds.south;
+  camera.scale = Math.min((width - 36) / spanX, (height - 36) / spanY);
+  camera.cx = ((bounds.west + bounds.east) / 2) * bounds.cos;
+  camera.cy = (bounds.south + bounds.north) / 2;
+}
+
+function screenOf(lon, lat) {
+  const ratio = window.devicePixelRatio || 1;
+  return [
+    canvas.width / 2 + (lon * bounds.cos - camera.cx) * camera.scale * ratio,
+    canvas.height / 2 - (lat - camera.cy) * camera.scale * ratio
+  ];
+}
+
+function resize() {
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, canvas.clientWidth * ratio);
+  canvas.height = Math.max(1, canvas.clientHeight * ratio);
+  hidePopup();
+  draw();
+}
+
+function stroke(line, color, width) {
+  if (!line || line.length < 2) return;
+  context.beginPath();
+  line.forEach(([lon, lat], index) => {
+    const [x, y] = screenOf(lon, lat);
+    if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+  });
+  context.strokeStyle = color;
+  context.lineWidth = width * (window.devicePixelRatio || 1);
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.stroke();
+}
+
+function fillRing(ring, color) {
+  if (!ring || ring.length < 3) return;
+  context.beginPath();
+  ring.forEach(([lon, lat], index) => {
+    const [x, y] = screenOf(lon, lat);
+    if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+  });
+  context.closePath();
+  context.fillStyle = color;
+  context.fill();
+}
+
+function heat(frequency) {
+  const stops = [[232, 226, 216], [252, 196, 122], [214, 96, 48], [122, 32, 18]];
+  const scaled = Math.max(0, Math.min(1, frequency)) * (stops.length - 1);
+  const index = Math.floor(scaled);
+  const mix = scaled - index;
+  const left = stops[index], right = stops[Math.min(index + 1, stops.length - 1)];
+  const channel = (slot) => Math.round(left[slot] + (right[slot] - left[slot]) * mix);
+  return "rgb(" + channel(0) + "," + channel(1) + "," + channel(2) + ")";
+}
+
+function drawBase() {
+  data.basemap.water.forEach((ring) => fillRing(ring, "#d5e3ea"));
+  data.basemap.green.forEach((ring) => fillRing(ring, "#e3eee3"));
+  data.basemap.streets.forEach((line) => stroke(line, "#e4e0d8", 1.1));
+  data.network.forEach((edge) => stroke(edge.line, "#c8c2b6", 1.15));
+}
+
+function drawIds(ids, color, width) {
+  ids.forEach((id) => stroke(geometry[id].line, color, width));
+}
+
+function legend(items) {
+  const box = document.getElementById("legend");
+  box.innerHTML = "";
+  items.forEach(([color, label]) => {
+    const row = document.createElement("div");
+    const swatch = document.createElement("span");
+    swatch.className = "swatch";
+    swatch.style.background = color;
+    row.append(swatch, document.createTextNode(label));
+    box.appendChild(row);
+  });
+  const credit = document.createElement("p");
+  credit.className = "credit";
+  credit.textContent = "Geometry © OpenStreetMap contributors, ODbL. Local streets, water, and parks. Buildings omitted.";
+  box.appendChild(credit);
+}
+
+function draw() {
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  drawBase();
+  const items = [["#c8c2b6", "Eligible cycling segments"]];
+  if (state.mode === "municipal") {
+    const plan = data.municipal.plans.find((item) => item.id === "municipal:" + state.municipalScenario + ":" + state.municipalKind);
+    drawIds(plan.existing.map((edge) => edge.id), "#163e72", 3.2);
+    drawIds(plan.added.map((edge) => edge.id), "#b4532a", 3.2);
+    items.push(["#163e72", "Published counting sites"], ["#b4532a", "Proposed additions"]);
+  } else if (state.mode === "compare") {
+    const left = findPlacement(state.methodA, state.trainingA, state.budgetCompare);
+    const right = findPlacement(state.methodB, state.trainingB, state.budgetCompare);
+    if (left && right) {
+      const overlap = compareSets(left.edges, right.edges);
+      drawIds(overlap.onlyLeft, "#0b6e4f", 3.2);
+      drawIds(overlap.onlyRight, "#b4532a", 3.2);
+      drawIds(overlap.shared, "#5c4d7a", 3.6);
+      items.push(["#0b6e4f", "Only method A"], ["#b4532a", "Only method B"], ["#5c4d7a", "Shared segments"]);
+    }
+  } else {
+    const placement = findPlacement(state.method, state.training, state.budget);
+    const table = state.stability && placement.stability_key ? data.stability[placement.stability_key] : null;
+    if (table) {
+      data.network.forEach((edge) => stroke(edge.line, heat(table.frequencies[edge.id] || 0), 1.6));
+      placement.edges.forEach((edge) => {
+        stroke(geometry[edge.id].line, "#14221c", 5);
+        stroke(geometry[edge.id].line, heat(table.frequencies[edge.id] || 0), 2.4);
+      });
+      items.push(["#f4c97a", "Selected in some draws"], ["#7a2012", "Selected in every draw"], ["#14221c", "Current counters, outlined"]);
+    } else {
+      drawIds(placement.edges.map((edge) => edge.id), "#0b6e4f", 3.3);
+      items.push(["#0b6e4f", "Selected counter segments"]);
+    }
+  }
+  legend(items);
+}
+
+function render() {
+  if (state.mode === "research") syncResearch();
+  if (state.mode === "compare") syncCompare();
+  if (state.mode === "municipal") syncMunicipal();
+  renderPanel();
+  hidePopup();
+  resize();
+}
+
+function currentHits() {
+  if (state.mode === "municipal") {
+    const plan = data.municipal.plans.find((item) => item.id === "municipal:" + state.municipalScenario + ":" + state.municipalKind);
+    return plan.existing.map((edge) => ({edge, role: "Published counting site"})).concat(plan.added.map((edge) => ({edge, role: "Proposed addition"})));
+  }
+  if (state.mode === "compare") {
+    const left = findPlacement(state.methodA, state.trainingA, state.budgetCompare);
+    const right = findPlacement(state.methodB, state.trainingB, state.budgetCompare);
+    if (!left || !right) return [];
+    const overlap = compareSets(left.edges, right.edges);
+    const lookup = Object.fromEntries([...left.edges, ...right.edges].map((edge) => [edge.id, edge]));
+    return [
+      ...overlap.shared.map((id) => ({edge: lookup[id], role: "Shared"})),
+      ...overlap.onlyLeft.map((id) => ({edge: lookup[id], role: "Only method A"})),
+      ...overlap.onlyRight.map((id) => ({edge: lookup[id], role: "Only method B"}))
+    ];
+  }
+  const placement = findPlacement(state.method, state.training, state.budget);
+  return placement.edges.map((edge) => ({edge, role: placement.method_label}));
+}
+
+function distanceTo(line, x, y) {
+  let best = Infinity;
+  for (let index = 1; index < line.length; index += 1) {
+    const [x1, y1] = screenOf(line[index - 1][0], line[index - 1][1]);
+    const [x2, y2] = screenOf(line[index][0], line[index][1]);
+    const dx = x2 - x1, dy = y2 - y1;
+    const length = dx * dx + dy * dy || 1;
+    const t = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / length));
+    const px = x1 + t * dx, py = y1 + t * dy;
+    best = Math.min(best, Math.hypot(x - px, y - py));
+  }
+  return best;
+}
+
+function popupRows(edge, role) {
+  const rows = [["Role", role]];
+  if (edge.rank) rows.push(["Selection rank", String(edge.rank)]);
+  rows.push(["Municipal site", municipalIds.has(edge.id) ? "Yes, a published counting location" : "No"]);
+  if (edge.marginal !== null && edge.marginal !== undefined) rows.push(["Calibration marginal gain", (edge.marginal * 100).toFixed(1) + " percentage points on the training objective"]);
+  if (edge.aadt !== undefined && edge.aadt !== null) rows.push(["Published bicycle AADT", Number(edge.aadt).toLocaleString("en-GB") + (edge.year ? " (" + edge.year + ")" : "") + ". Observed count, not modeled coverage."]);
+  if (edge.solver_support === true) rows.push(["Solver support", "In the certified support"]);
+  if (edge.solver_support === false) rows.push(["Solver support", "Added by the deterministic fill"]);
+  if (state.mode === "research") {
+    const placement = findPlacement(state.method, state.training, state.budget);
+    const table = placement.stability_key ? data.stability[placement.stability_key] : null;
+    if (table) rows.push(["Selection frequency", ((table.frequencies[edge.id] || 0) * 100).toFixed(0) + "% of " + table.n_replicates + " calibration draws"]);
+  }
+  return rows;
+}
+
+function showPopup(hit, clientX, clientY) {
+  const popup = document.getElementById("popup");
+  document.getElementById("popup-name").textContent = hit.edge.name || "Unnamed segment";
+  document.getElementById("popup-id").textContent = hit.edge.id;
+  const list = document.getElementById("popup-facts");
+  list.innerHTML = "";
+  popupRows(hit.edge, hit.role).forEach(([term, detail]) => {
+    const dt = document.createElement("dt");
+    dt.textContent = term;
+    const dd = document.createElement("dd");
+    dd.textContent = detail;
+    list.append(dt, dd);
+  });
+  popup.hidden = false;
+  const rect = canvas.getBoundingClientRect();
+  const left = Math.min(clientX - rect.left + 12, rect.width - popup.offsetWidth - 8);
+  const top = Math.min(clientY - rect.top + 12, rect.height - popup.offsetHeight - 8);
+  popup.style.left = Math.max(8, left) + "px";
+  popup.style.top = Math.max(8, top) + "px";
+}
+
+function hidePopup() { document.getElementById("popup").hidden = true; }
+
+document.getElementById("mode-research").onclick = () => setMode("research");
+document.getElementById("mode-compare").onclick = () => setMode("compare");
+document.getElementById("mode-municipal").onclick = () => setMode("municipal");
+document.getElementById("method").onchange = (event) => { state.method = event.target.value; render(); };
+document.getElementById("training").onchange = (event) => {
+  state.training = event.target.value;
+  if (event.target.value !== "both") state.scenarioTraining = event.target.value;
+  render();
+};
+document.getElementById("budget").onchange = (event) => { state.budget = Number(event.target.value); render(); };
+document.getElementById("evaluation").onchange = (event) => { state.evaluation = event.target.value; render(); };
+document.getElementById("condition").onchange = (event) => { state.condition = event.target.value; render(); };
+document.getElementById("stability").onchange = (event) => { state.stability = event.target.checked; render(); };
+document.getElementById("method-a").onchange = (event) => { state.methodA = event.target.value; render(); };
+document.getElementById("training-a").onchange = (event) => { state.trainingA = event.target.value; render(); };
+document.getElementById("method-b").onchange = (event) => { state.methodB = event.target.value; render(); };
+document.getElementById("training-b").onchange = (event) => { state.trainingB = event.target.value; render(); };
+document.getElementById("budget-compare").onchange = (event) => { state.budgetCompare = Number(event.target.value); render(); };
+document.getElementById("evaluation-compare").onchange = (event) => { state.evaluationCompare = event.target.value; render(); };
+document.getElementById("condition-compare").onchange = (event) => { state.conditionCompare = event.target.value; render(); };
+document.getElementById("municipal-scenario").onchange = (event) => { state.municipalScenario = event.target.value; render(); };
+document.getElementById("municipal-plan").onchange = (event) => { state.municipalKind = event.target.value; render(); };
+document.getElementById("evaluation-municipal").onchange = (event) => { state.evaluationMunicipal = event.target.value; render(); };
+document.getElementById("condition-municipal").onchange = (event) => { state.conditionMunicipal = event.target.value; render(); };
+document.getElementById("popup-close").onclick = hidePopup;
+
+canvas.addEventListener("wheel", (event) => {
+  event.preventDefault();
+  const ratio = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const x = (event.clientX - rect.left) * ratio;
+  const y = (event.clientY - rect.top) * ratio;
+  const beforeX = camera.cx + (x - canvas.width / 2) / (camera.scale * ratio);
+  const beforeY = camera.cy - (y - canvas.height / 2) / (camera.scale * ratio);
+  camera.scale = Math.max(camera.scale * (event.deltaY > 0 ? 0.9 : 1.1), camera.scale * 0.2);
+  const fitted = boundsOf();
+  const span = Math.min(canvas.clientWidth / ((fitted.east - fitted.west) * fitted.cos), canvas.clientHeight / (fitted.north - fitted.south));
+  camera.scale = Math.max(span * 0.6, Math.min(camera.scale, span * 18));
+  camera.cx = beforeX - (x - canvas.width / 2) / (camera.scale * ratio);
+  camera.cy = beforeY + (y - canvas.height / 2) / (camera.scale * ratio);
+  draw();
+}, {passive: false});
+
+canvas.addEventListener("pointerdown", (event) => {
+  drag = {x: event.clientX, y: event.clientY, cx: camera.cx, cy: camera.cy, moved: false};
+  canvas.classList.add("dragging");
+  canvas.setPointerCapture(event.pointerId);
+});
+canvas.addEventListener("pointermove", (event) => {
+  if (!drag) return;
+  const ratio = window.devicePixelRatio || 1;
+  const dx = (event.clientX - drag.x) * ratio;
+  const dy = (event.clientY - drag.y) * ratio;
+  if (Math.hypot(dx, dy) > 3) drag.moved = true;
+  camera.cx = drag.cx - dx / (camera.scale * ratio);
+  camera.cy = drag.cy - dy / (camera.scale * ratio);
+  draw();
+});
+canvas.addEventListener("pointerup", (event) => {
+  canvas.classList.remove("dragging");
+  if (drag && !drag.moved) {
+    const ratio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * ratio;
+    const y = (event.clientY - rect.top) * ratio;
+    let best = null;
+    currentHits().forEach((hit) => {
+      const line = geometry[hit.edge.id] && geometry[hit.edge.id].line;
+      if (!line) return;
+      const distance = distanceTo(line, x, y);
+      if (distance < 10 * ratio && (!best || distance < best.distance)) best = {hit, distance};
+    });
+    if (best) showPopup(best.hit, event.clientX, event.clientY);
+    else hidePopup();
+  }
+  drag = null;
+});
+
+document.getElementById("method-notes").innerHTML = data.notes.map((note) => "<p>" + note + "</p>").join("");
+bounds = boundsOf();
+fit();
+window.addEventListener("resize", () => { fit(); resize(); });
+render();
+</script>
+</body>
+</html>

@@ -142,6 +142,15 @@ Placement stability redraws calibration routes. It does not overwrite the canoni
 python scripts/run_placement_stability.py
 ```
 
+The planner reads those saved results and writes one local page. It does not place counters or recompute coverage:
+
+```bash
+python scripts/map_planner.py
+python -m http.server 8765
+```
+
+Open <http://127.0.0.1:8765/outputs/planner/cyclesense_planner.html>. The page uses the saved street geometry and does not request public map tiles. What each control can and cannot show is in `docs/planner.md`.
+
 The M1 pilot uses the rectangle in `configs/pilot.yaml`. A first build reads `cache/osm/Copenhagen.osm.pbf` and, if that file is absent, downloads the current BBBike Copenhagen extract. That URL is not a frozen historical snapshot. Exact graph reproduction needs the PBF whose SHA-256 is recorded in `configs/reproducibility.yaml`, or the saved GraphML. The build needs the `analysis` extra, including `osmium`:
 
 ```bash
@@ -290,6 +299,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - [x] **M5.9**: Route-choice-aware placement, with a negative held-out result against the pooled shortest-path control
 - [x] **M5.10**: Exact MILP benchmark of the coverage objective. Greedy matches the optimum at K=5 and K=10; a higher calibration value does not consistently raise held-out coverage
 - [x] **M5.11**: Stability of greedy locations across 30 independent calibration draws. One bridge segment is selected every time; whole K=10 sets are not
+- [x] **M5.12**: Interactive planner over the saved placements. Missing evaluations stay blank
 
 ## Data management
 
