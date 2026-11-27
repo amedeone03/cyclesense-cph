@@ -289,6 +289,8 @@ def validate_outputs(root: Path, *, allow_missing: set[str] | None = None) -> tu
         errors.extend(_check_placement_stability(root))
     if (root / "outputs/infrastructure/summary.json").is_file():
         errors.extend(_check_infrastructure(root))
+    if (root / "outputs/municipal_redundancy/summary.json").is_file():
+        errors.extend(_check_municipal_redundancy(root))
     return errors, notes
 
 
@@ -495,6 +497,26 @@ def _check_infrastructure(root: Path) -> list[str]:
         errors.append("infrastructure study did not keep the 1,047 eligible segments")
     if summary.get("unrestricted_matches_m2") is not True:
         errors.append("unrestricted infrastructure placement does not match M2 greedy")
+    return errors
+
+
+def _check_municipal_redundancy(root: Path) -> list[str]:
+    summary = json.loads((root / "outputs/municipal_redundancy/summary.json").read_text(encoding="utf-8"))
+    errors = []
+    if summary.get("routes_are_simulated") is not True:
+        errors.append("municipal redundancy summary does not mark routes as simulated")
+    if summary.get("held_out_used_for_selection") is not False:
+        errors.append("municipal redundancy used held-out routes for selection")
+    if summary.get("removal_recommendation") is not False:
+        errors.append("municipal redundancy is marked as a removal recommendation")
+    if int(summary.get("n_sites") or 0) != 26:
+        errors.append("municipal redundancy summary does not keep 26 sites")
+    if summary.get("baseline_matches_saved") is not True:
+        errors.append("municipal redundancy coverage does not match the saved baseline")
+    if summary.get("shapley_sums_to_coverage") is not True:
+        errors.append("municipal redundancy Shapley values do not sum to coverage")
+    if summary.get("unique_equals_leave_one_out") is not True:
+        errors.append("municipal redundancy unique coverage does not equal leave-one-out")
     return errors
 
 

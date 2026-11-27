@@ -148,6 +148,12 @@ Mapped-infrastructure policies reuse the same greedy and MILP selectors on a sma
 python scripts/run_infrastructure_study.py
 ```
 
+Attribution of the 26 published counting sites uses the saved ids and does not place new counters:
+
+```bash
+python scripts/run_municipal_redundancy.py
+```
+
 The planner reads those saved results and writes one local page. It does not place counters or recompute coverage:
 
 ```bash
@@ -280,6 +286,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - On a nested uniform sample, verified LSH with 32 permutations and 16×2 bands keeps about 99.6% of the exact Jaccard edges from 500 to 10,000 routes and is about eight times faster than streaming exact at 10,000 routes. Streaming exact uses less Python-tracked memory at every size. The ten selected counters still change as the sample grows.
 - A shared greedy set trained on shortest paths and 15% calibration detours does not improve held-out coverage under alternative routes. At K=10 it keeps 9 of the 10 pooled shortest-path counters. On fresh seeds it is about one point lower on uniform alternatives and about one point higher on commuter alternatives. Its shortest-path coverage is lower, especially for uniform routes (69.6% against 72.8% for the uniform greedy). Details are in `docs/robust_placement.md`.
 - Requiring a mapped cycling facility keeps 381 of 1,047 candidates and lowers held-out coverage by a few points. Limiting the search to the 107 dedicated cycleways moves the counters and cuts held-out coverage by about 30–47 points. Details are in `docs/infrastructure_constraints.md`.
+- On the calibration routes, Knippelsbro has the largest unique modeled-route contribution (about 7.4–7.6 points). Several traversed sites have zero unique contribution because other municipal segments cover the same simulated routes. That is shared modeled coverage, not a reason to remove a counting site. Details are in `docs/municipal_redundancy.md`.
 
 ## Limitations
 
@@ -309,6 +316,7 @@ These are the results of the saved runs. The detailed tables are in `docs/`.
 - [x] **M5.11**: Stability of greedy locations across 30 independent calibration draws. One bridge segment is selected every time; whole K=10 sets are not
 - [x] **M5.12**: Interactive planner over the saved placements. Missing evaluations stay blank
 - [x] **M5.13**: Mapped-infrastructure candidate policies. See `docs/infrastructure_constraints.md`
+- [x] **M5.14**: Attribution of modeled-route coverage across the 26 name-verified counting sites. A zero leave-one-out value is not a removal recommendation
 
 ## Data management
 

@@ -217,6 +217,12 @@ infrastructure:
   scenarios: [uniform, commuter_proxy]
   policies: [unrestricted, explicit_facility, dedicated]
 
+# M5.14 retrospective attribution. Held-out routes do not rank sites or choose additions.
+municipal_redundancy:
+  scenarios: [uniform, commuter_proxy]
+  aadt_permutation_draws: 2000
+  aadt_permutation_seed: 14014
+
 notes: >
   M1 pilot parameters. The rectangle above is the exact study boundary.
   Uniform and commuter-proxy draws are simulated routes, not bicycle counts.

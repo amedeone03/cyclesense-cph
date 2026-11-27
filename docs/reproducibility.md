@@ -74,9 +74,10 @@ Full mode runs the existing scripts in this order:
 11. `scripts/run_placement_stability.py` (heavy)
 12. `scripts/run_scalability_study.py` (heavy)
 13. `scripts/run_infrastructure_study.py`
-14. `scripts/map_m1.py`
-15. `scripts/map_standout.py`
-16. `scripts/validate_results.py`
+14. `scripts/run_municipal_redundancy.py`
+15. `scripts/map_m1.py`
+16. `scripts/map_standout.py`
+17. `scripts/validate_results.py`
 
 A step whose output file already exists is skipped. Pass `--confirm-overwrite` to rerun it. That flag can replace saved results because the runners write to fixed paths. There is no separate output directory.
 
@@ -84,7 +85,7 @@ A step whose output file already exists is skipped. Pass `--confirm-overwrite` t
 python scripts/reproduce.py --mode full --skip-heavy
 ```
 
-`--skip-heavy` skips steps 10–12: the exact MILP benchmark, the placement-stability resampling, and the nested 500 to 10,000 route scalability study. Smoke mode does not run the infrastructure study. Full mode runs it when `outputs/infrastructure/summary.json` is absent. Integrated LSH, route-choice, and robust placement still run when their outputs are absent. Smoke mode does not solve a MILP or draw new calibration samples. On this machine the integrated study took several minutes, the scalability study took about 17 minutes, the robust-placement study took about 36 seconds once the saved graph was loaded, the exact benchmark took about 28 seconds, and the stability study took about 4 minutes. A from-scratch M1 build also needs the OSM extract and a network connection the first time the PBF is fetched.
+`--skip-heavy` skips steps 10–12: the exact MILP benchmark, the placement-stability resampling, and the nested 500 to 10,000 route scalability study. Smoke mode does not run the infrastructure study or the municipal-redundancy attribution. Full mode runs it when `outputs/infrastructure/summary.json` is absent. Integrated LSH, route-choice, and robust placement still run when their outputs are absent. Smoke mode does not solve a MILP or draw new calibration samples. On this machine the integrated study took several minutes, the scalability study took about 17 minutes, the robust-placement study took about 36 seconds once the saved graph was loaded, the exact benchmark took about 28 seconds, and the stability study took about 4 minutes. A from-scratch M1 build also needs the OSM extract and a network connection the first time the PBF is fetched.
 
 This repository was not rebuilt from an empty `data/` and `outputs/` tree during the reproducibility freeze. The smoke check and `python scripts/validate_results.py` were run against the saved artifacts. Full mode on that tree skips every step that already has an output.
 
