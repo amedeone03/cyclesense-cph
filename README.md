@@ -1,350 +1,272 @@
 # CycleSense CPH
 
-**Robust and diversity-aware bicycle-counter placement in Copenhagen**  
-DTU 02807 · Computational Tools for Data Science · 2026 final project
+**Simulation-based bicycle-counter placement in central Copenhagen**  
+**DTU 02807 — Computational Tools for Data Science · Autumn 2026**
 
-## Research goal
+CycleSense CPH studies where a limited number of bicycle counters could be placed on a mapped street network to cover as many **simulated cycling routes** as possible. It combines graph analysis, MinHash/Locality-Sensitive Hashing (LSH), Louvain community detection, greedy optimization, exact mixed-integer programming, and robustness analysis.
 
-Given a budget of **K counters**, where should they be installed on a Copenhagen cycling network to balance:
+> **Project status:** The computational implementation, experiments, and reproducible analysis notebook are complete. **The academic report is a team draft**, not a final hand-in: group names, individual contributions, and the final character count still require review.
+>
+> **Scientific scope:** Street geometry comes from OpenStreetMap; the routes and coverage scores are simulated. The project does **not** estimate the percentage of real cyclists captured, validate actual installation feasibility, or recommend removing municipal counting locations.
 
-1. **Modeled-route coverage** — proportion of plausible cycling routes intersecting at least one counter;
-2. **Corridor diversity** — representation across distinct communities of overlapping routes;
-3. **Robustness** — stability when origin–destination and route-choice assumptions change.
+## Start here — guide for teammates
 
-**Main research question:** Can route-similarity communities improve the coverage/diversity/robustness trade-off relative to geographical placement and pure maximum-coverage methods?
+| If you want to… | Start with |
+| --- | --- |
+| Understand the entire study and its main findings | **This README**, then [the analysis notebook](notebooks/analysis.ipynb) |
+| Write or revise the academic report | [Report source](report/report.tex), [draft PDF](report/report.pdf), and [the experiment documentation](docs/) |
+| Check the numbers and generate core figures | [Notebook](notebooks/analysis.ipynb) and [validated notebook assets](notebooks/assets/) |
+| Understand the research design | [Research plan](docs/research_plan.md), [M1 assumptions](docs/m1_assumptions.md), and [reproducibility notes](docs/reproducibility.md) |
+| Run code or tests | [Installation and commands](#installation-and-quick-start) |
+| Explore counter locations interactively | [Interactive planner](#interactive-planner-optional-local-artifacts) |
 
-The project is a **simulation-based methods study**. OpenStreetMap geometry is real infrastructure data, but modeled journeys are **not observed cyclist trips**. We must not claim actual capture rates, forecast demand, or produce municipality-approved physical installation locations.
+**Suggested reading order for report writers:** Introduction and conclusions in the notebook → baseline/optimization results → MinHash–LSH/Louvain results → robustness → municipal comparison → the report draft. The detailed `docs/` files support claims that cannot fit in the short report.
 
-## Proposed methodology
+## Research question and approach
 
-1. Extract and audit a versioned Copenhagen bicycle-routing graph using OpenStreetMap/OSMnx.
-2. Generate several reproducible origin–destination and route-choice scenarios.
-3. Represent routes as sets of physical/eligible street-edge IDs.
-4. Find high-overlap route pairs with **MinHash + LSH**; measure recall versus exact Jaccard and computation cost.
-5. Build a route-overlap graph and apply **Louvain** community detection; evaluate stability.
-6. Place counters with geographical K-Means, route-frequency, plain greedy maximum coverage, and community-aware greedy.
-7. Evaluate on **held-out synthetic routes** and different assumptions; compare coverage, per-community representation, robustness, time, and RAM.
+**Given a budget of `K` eligible physical street segments, which locations maximize modeled-route coverage, and how reliable are those locations under computational and behavioral uncertainty?**
 
-**Current implementation state:** M1 through M5 are implemented. M5 checks those results with a 30-seed shuffle, new simulated evaluation samples, and a matched exact-versus-LSH timing. M5.6 rescores the saved placements on simulated detours. M5.7 times streaming exact and verified LSH on nested samples up to 10,000 simulated routes. A separate external check compares the saved routes with published municipal bicycle counts. Modeled routes are not observed trips.
+We investigate four connected questions:
 
-## Project structure
+1. **Optimization:** How well does greedy maximum coverage perform compared with other placement rules and a certified mathematical optimum?
+2. **Computational methods:** Can verified MinHash–LSH approximate exact route-overlap computation while preserving meaningful Louvain communities and counter placements?
+3. **Reliability:** How do alternative simulated routes, origin–destination assumptions, and calibration samples change coverage and chosen locations?
+4. **External interpretation:** How do the model's proposed locations and coverage relate to Copenhagen's published bicycle counting sites?
+
+### Conceptual pipeline
 
 ```text
-cyclesense-cph/
-├── .cursor/rules/project.mdc     # Optional Cursor project guidance
-├── .github/workflows/tests.yml  # CI for pure-Python baseline
-├── configs/pilot.yaml           # Experimental configuration and seeds
-├── configs/reproducibility.yaml # Snapshot hashes and experiment order
-├── snapshots/trafiktal-2026-11-21.csv  # Frozen CC0 municipal counts
-├── docs/
-│   ├── research_plan.md         # Hypotheses and evaluation protocol
-│   ├── data_sources.md          # Provenance / limitations
-│   ├── m1_assumptions.md        # M1 boundary, candidates, route rules
-│   ├── m2_baselines.md          # Placement baselines
-│   ├── m3_communities.md        # Jaccard, MinHash/LSH, and Louvain
-│   ├── m4_optimization.md       # Community-balanced placement
-│   ├── m5_final_validation.md   # Shuffle, new-sample, and LSH validation
-│   ├── integrated_study.md      # Exact versus verified-LSH placement pipelines
-│   ├── route_choice_robustness.md  # Fixed placements on simulated detours
-│   ├── robust_placement.md      # Shared placement trained on simulated detours
-│   ├── scalability_study.md     # Streaming exact and verified LSH at larger samples
-│   ├── reproducibility.md       # Install, snapshots, and experiment order
-│   ├── standout_extension.md    # Municipal counts and complementary placement
-│   └── research_proposal.pdf    # Updated working proposal
-├── notebooks/analysis.ipynb     # Reporting notebook starter
-├── scripts/download_graph.py    # Optional Overpass download; skips a saved M1 graph
-├── scripts/run_m1.py            # Pilot graph, candidates, and routes
-├── scripts/map_m1.py            # Interactive map of the saved M1 network
-├── scripts/run_m2.py            # Placement baselines on the saved M1 routes
-├── scripts/run_m3.py            # Route similarity, LSH, and Louvain communities
-├── scripts/run_m4.py            # Community-balanced greedy on the saved routes
-├── scripts/run_m5.py            # Final validation of the saved placements
-├── scripts/run_integrated_study.py  # Exact versus verified-LSH pipelines
-├── scripts/run_route_choice_study.py  # Fixed placements on simulated detours
-├── scripts/run_scalability_study.py  # Larger nested samples, exact and LSH
-├── scripts/run_robust_placement.py  # Shared placement on simulated route choices
-├── scripts/run_external_validation.py  # Municipal counts and complementary greedy
-├── scripts/map_standout.py      # Interactive map of the external check
-├── scripts/reproduce.py         # Smoke check or ordered rerun of existing scripts
-├── scripts/validate_results.py  # Consistency checks on saved outputs
-├── src/cyclesense/
-│   ├── coverage.py              # Exact coverage + greedy baseline
-│   ├── placement.py             # M2 baselines
-│   ├── similarity.py            # Exact Jaccard baseline
-│   ├── minhash.py               # MinHash + LSH
-│   ├── communities.py           # Louvain communities
-│   ├── balanced.py              # Community-balanced greedy
-│   ├── integrated.py            # Exact versus verified-LSH pipelines
-│   ├── route_choice.py          # Perturbed shortest paths and detour checks
-│   ├── scalability.py           # Nested-sample timing, memory, and recall checks
-│   ├── external_validation.py   # Count matching and complementary placement
-│   ├── standout_map.py          # Folium map of the external check
-│   ├── edges.py                 # Physical segment ids and eligibility
-│   ├── network.py               # OSMnx extract, audit, candidates
-│   ├── artifacts.py             # Canonical M1 file locations
-│   ├── reproducibility.py       # Snapshot checks and experiment order
-│   ├── interactive.py           # Folium map of candidates and route samples
-│   ├── sampling.py              # Uniform and commuter-proxy OD draws
-│   └── routes.py                # Shortest paths and calibration split
-├── tests/                       # Small synthetic tests
-├── pyproject.toml
-└── .gitignore
+Versioned OSM extract ──→ Directed bicycle-routing graph
+                                 │
+                                 ▼
+                   Simulated origin–destination pairs
+                                 │
+                                 ▼
+                  Routes as physical street-segment sets
+                       │                     │
+                       ▼                     ▼
+            Jaccard / MinHash–LSH     Counter candidates
+                       │                     │
+                       ▼                     ▼
+               Route-overlap graph    Greedy / MILP placement
+                       │                     │
+                       ▼                     │
+                Louvain communities ──→ Community-weighted variant
+                                             │
+                                             ▼
+                                 Independent held-out evaluation
+                                             │
+                         ┌───────────────────┴────────────────────┐
+                         ▼                                        ▼
+                 Robustness / stability                    Municipal data check
 ```
 
-## Get started (Cursor / macOS)
+A route is **covered** if it crosses at least one selected physical segment. It counts only once even if it crosses several proposed counters. For nonnegative route weights, the optimization objective is
 
-Requires Python 3.11 or newer. From the project folder, open the **Terminal** in Cursor and run:
+\[
+F(S)=\sum_{r\in R} w_r\,\mathbf{1}\{E(r)\cap S\neq\varnothing\},
+\qquad S\subseteq C,\quad |S|\leq K.
+\]
+
+Here, `R` is a set of simulated routes, `C` is the eligible candidate set, and `E(r)` is the set of physical segments traversed by route `r`. The project's standard greedy selector maximizes successive marginal coverage gains.
+
+### Data and experimental setup
+
+| Item | Validated pilot setup |
+| --- | --- |
+| Study area | An approximately 2 × 2 km rectangle around Indre By, central Copenhagen |
+| Network source | OpenStreetMap via a BBBike Copenhagen PBF extract, recorded 14 November 2026 |
+| Routing graph | 1,157 nodes, 2,732 directed edges |
+| Physical street segments | 1,698 (opposite directions mapped to shared physical IDs) |
+| Eligible counting segments | 1,047 |
+| Simulated OD scenarios | Uniform sampling and a commuter-proxy sampler |
+| Canonical routes | Per scenario: 500 calibration routes + 250 held-out routes |
+| Main counter budgets | `K = 5, 10, 20, 30` |
+| Municipal comparison | 26 name-verified counting locations from Copenhagen's published Trafiktal data |
+
+Only the **calibration routes** are used to choose counters and route communities. Held-out routes are used to evaluate finished selections. The commuter-proxy scenario is an assumption, **not an observed commuting-demand model**.
+
+## Methods in plain language
+
+| Method | What it does | Why it matters |
+| --- | --- | --- |
+| **Maximum-coverage greedy** | Repeatedly selects the physical segment that covers the most additional weighted simulated routes | Strong, interpretable placement baseline; the fixed nonnegative objective is monotone submodular with a `1-1/e` approximation guarantee |
+| **MILP / HiGHS** | Solves the same coverage problem using binary counter and route-coverage variables | Measures greedy's calibration optimality gap with solver certification |
+| **Exact Jaccard** | Measures route similarity from overlap between physical-segment sets | Ground truth for evaluating approximate similarity retrieval |
+| **MinHash + verified LSH** | Proposes potentially similar route pairs using signatures and buckets, then verifies them using exact Jaccard | Reduces pairwise search work without treating hash collisions as confirmed similarities |
+| **Louvain** | Detects communities in a weighted route-overlap graph | Tests whether representing route groups improves placement beyond total coverage |
+| **Community-balanced greedy** | Reweights calibration routes using Louvain communities | Explores a coverage/diversity trade-off |
+| **Route-choice and sampling sensitivity** | Perturbs simulated path costs and resamples calibration routes | Tests whether performance and locations survive changes in assumptions |
+| **Infrastructure filters** | Restricts eligible segments using saved OSM cycling-facility tags | Measures the coverage cost of hypothetical mapped-infrastructure policies |
+| **Coverage attribution / Shapley** | Allocates unique and shared modeled coverage among municipal counting sites | Separates redundancy of modeled routes from real-world usefulness |
+
+**A crucial distinction:** MILP certifies optimality only for a stated **calibration objective**, not for observed Copenhagen traffic or a real installation decision.
+
+## Main findings
+
+These are selected results from the validated experiments; the notebook and linked documentation contain the complete comparisons. Percentages below measure **simulated-route coverage**, unless explicitly labeled otherwise.
+
+| Finding | Evidence | Interpretation |
+| --- | --- | --- |
+| **Greedy is a strong baseline** | At uniform `K=10`, held-out greedy coverage is **72.8%**, versus **40.4%** for the route-frequency baseline | Choosing marginally new routes matters more than selecting the busiest-looking segments |
+| **Greedy is nearly optimal on calibration routes** | Unweighted greedy equals the certified MILP optimum at `K=5` and `K=10` in both scenarios; larger-budget gaps are below 1 percentage point | Optimization error is small for the defined maximum-coverage objective |
+| **Calibration ties do not imply identical generalization** | At uniform `K=10`, greedy and an MILP solution both attain **74.0%** calibration coverage, but **72.8%** versus **68.8%** held-out coverage | Different optimal counter sets can generalize differently |
+| **Verified LSH speeds up the large route-similarity pipeline** | At 10,000 simulated routes: approximately **10.28 s** for verified LSH versus **85.29 s** for streaming exact Jaccard (~8.3×) | LSH reduces runtime, but streaming exact used **less Python-tracked memory**; the largest exact timing was one run |
+| **Community balancing is not a consistent gain** | At `K=10`, uniform held-out coverage is **72.4%** for the `λ=0.25` balanced rule versus **72.8%** for greedy; commuter is **66.8%** versus **69.2%** | Louvain is useful for studying route structure, but reweighting does not reliably improve coverage |
+| **Alternative simulated paths reduce coverage** | Uniform greedy `K=10` changes from **72.8%** on original held-out paths to about **65.7%** under the 15% detour experiment | A good shortest-path placement is sensitive to route-choice assumptions |
+| **Selected locations are unstable** | Across 30 new uniform calibration draws at `K=10`, only **Knippelsbro / Børsgade** appears in every set; mean pairwise set Jaccard is **0.27** | Similar coverage can be delivered by substantially different streets |
+| **Municipal locations provide a useful modeled reference** | The 26 matched sites cover **73.6%** of uniform held-out simulated routes; 5 greedy additions reach **83.6%**, and 10 reach **87.2%** | The extra percentages are modeled gains, **not observed cyclist capture** |
+| **External count agreement is weak** | The simulated traversal ranking versus published bicycle AADT has Spearman `ρ≈0.26` in the uniform scenario | The simulation is not an empirically validated traffic-demand model |
+| **Stricter infrastructure filters can be costly** | At uniform `K=10`, held-out coverage falls from **72.8%** unrestricted to **68.4%** with explicitly mapped facilities, or **30.0%** for dedicated-cycleway-only candidates | OSM tags are useful for sensitivity tests, not proof of installation feasibility |
+
+**Overall conclusion:** Greedy already performs very well on the specified simulated coverage objective. The larger limitations are **how routes are simulated, how candidate streets are defined, how unstable equivalent placements can be, and how weakly simulated traversals reflect observed bicycle counts**.
+
+### Where to find the evidence
+
+| Topic | Main technical record |
+| --- | --- |
+| Network creation and scenario assumptions | [`docs/m1_assumptions.md`](docs/m1_assumptions.md) |
+| Baselines and coverage evaluation | [`docs/m2_baselines.md`](docs/m2_baselines.md) |
+| Jaccard, MinHash–LSH and Louvain | [`docs/m3_communities.md`](docs/m3_communities.md) |
+| Community-weighted placement and ablations | [`docs/m4_optimization.md`](docs/m4_optimization.md) |
+| End-to-end approximate vs exact pipeline | [`docs/integrated_study.md`](docs/integrated_study.md) |
+| 500–10,000-route performance and memory | [`docs/scalability_study.md`](docs/scalability_study.md) |
+| Route-choice perturbation and route-aware training | [`docs/route_choice_robustness.md`](docs/route_choice_robustness.md), [`docs/robust_placement.md`](docs/robust_placement.md) |
+| Certified MILP vs greedy | [`docs/exact_optimization.md`](docs/exact_optimization.md) |
+| Stability over 30 independent calibration draws | [`docs/placement_stability.md`](docs/placement_stability.md) |
+| OSM facility-tag restrictions | [`docs/infrastructure_constraints.md`](docs/infrastructure_constraints.md) |
+| Published traffic counts and complementary sites | [`docs/standout_extension.md`](docs/standout_extension.md) |
+| Unique/shared coverage and Shapley attribution | [`docs/municipal_redundancy.md`](docs/municipal_redundancy.md) |
+| Interactive planning interface | [`docs/planner.md`](docs/planner.md) |
+
+## Installation and quick start
+
+Requirements: **Python 3.11 or newer** and Git. Run these commands from the repository root.
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # macOS / Linux
 python -m pip install --upgrade pip
-pip install -e '.[dev]'
-pytest -q
-python -m cyclesense
-```
-
-For network analysis and interactive notebooks, additionally install:
-
-```bash
-pip install -e '.[analysis]'
-```
-
-Check the checkout before running experiments. Smoke mode does not download data and does not rerun studies:
-
-```bash
-python scripts/reproduce.py --mode smoke
-```
-
-The published experiment order, without the 10,000-route scalability study, is:
-
-```bash
-python scripts/reproduce.py --mode full --skip-heavy
-```
-
-`--skip-heavy` omits the exact MILP benchmark, the placement-stability study, and `scripts/run_scalability_study.py`. Integrated LSH, route-choice, and robust placement still run when their outputs are missing. Existing outputs are kept unless you pass `--confirm-overwrite`. Full mode has been run here only as a skip of existing outputs. It has not been run as a from-scratch rebuild. Data, checksums, and that limitation are in `docs/reproducibility.md`.
-
-The route-choice-aware placement reads calibration routes only:
-
-```bash
-python scripts/run_robust_placement.py
-```
-
-The exact coverage benchmark is optional. It does not replace greedy, and smoke mode does not run it:
-
-```bash
-python scripts/run_exact_optimization.py
-```
-
-Placement stability redraws calibration routes. It does not overwrite the canonical M1 sample:
-
-```bash
-python scripts/run_placement_stability.py
-```
-
-Mapped-infrastructure policies reuse the same greedy and MILP selectors on a smaller candidate set:
-
-```bash
-python scripts/run_infrastructure_study.py
-```
-
-Attribution of the 26 published counting sites uses the saved ids and does not place new counters:
-
-```bash
-python scripts/run_municipal_redundancy.py
-```
-
-The planner reads those saved results and writes one local page. It does not place counters or recompute coverage:
-
-```bash
-python scripts/map_planner.py
-python -m http.server 8765
-```
-
-Open <http://127.0.0.1:8765/outputs/planner/cyclesense_planner.html>. The page uses the saved street geometry and does not request public map tiles. What each control can and cannot show is in `docs/planner.md`.
-
-The M1 pilot uses the rectangle in `configs/pilot.yaml`. A first build reads `cache/osm/Copenhagen.osm.pbf` and, if that file is absent, downloads the current BBBike Copenhagen extract. That URL is not a frozen historical snapshot. Exact graph reproduction needs the PBF whose SHA-256 is recorded in `configs/reproducibility.yaml`, or the saved GraphML. The build needs the `analysis` extra, including `osmium`:
-
-```bash
-python scripts/run_m1.py
-```
-
-The canonical M1 graphs, written by `scripts/run_m1.py`, are:
-
-- `data/processed/m1/copenhagen_bike_full.graphml`
-- `data/processed/m1/copenhagen_bike_routing_wgs84.graphml`
-- `data/processed/m1/copenhagen_bike_routing_projected.graphml`
-
-There is no `data/processed/copenhagen_bike.graphml`. `scripts/download_graph.py --place ... --output ...` only saves a GraphML after an Overpass download returns. That download did not return, so the requested path was never created. When the validated M1 files above already exist, the same command prints those paths and does not download or copy the graph. Assumptions and the extraction record are in `docs/m1_assumptions.md`.
-
-Regenerate the interactive map from the saved network and routes:
-
-```bash
-python scripts/map_m1.py
-python scripts/map_m1.py --no-basemap
-python scripts/map_m1.py --serve
-```
-
-`python scripts/map_m1.py` writes `outputs/m1/m1_network.html` and draws streets, street names, buildings, parks, and water from `cache/osm/Copenhagen.osm.pbf` inside the Indre By rectangle. The bicycle network, eligible counter segments, and six simulated routes are layers on top. Click a blue segment to read its physical-edge ID. Uncheck **Geographical basemap** in that same page for the tile-free network view.
-
-`python scripts/map_m1.py --no-basemap` writes the tile-free view only and does not read the PBF.
-
-`python scripts/map_m1.py --serve` rebuilds the default map and opens it at <http://127.0.0.1:8765/m1_network.html>. The page does not request `tile.openstreetmap.org`. Geometry is attributed to OpenStreetMap contributors under the ODbL.
-
-M2 places counters on the saved M1 candidates. It reads calibration routes only, then scores the held-out routes. It does not regenerate routes.
-
-```bash
-python scripts/run_m2.py
-```
-
-The protocol is `docs/m2_baselines.md`. Figures and the K=10 placement map are written under `outputs/m2/`.
-
-M3 compares calibration routes with exact Jaccard, MinHash/LSH, and Louvain. It does not place counters.
-
-```bash
-python scripts/run_m3.py
-```
-
-The protocol and the measured record are in `docs/m3_communities.md`. Figures and the community map are written under `outputs/m3/`.
-
-M4 reuses that greedy selector with calibration community weights. Lambda 0 matches the saved M2 greedy placements. It does not regenerate routes.
-
-```bash
-python scripts/run_m4.py
-```
-
-The protocol and the measured record are in `docs/m4_optimization.md`. Figures and the K=10 comparison map are written under `outputs/m4/`.
-
-M5 does not move the counters. It repeats the shuffle with 30 seeds, scores the saved placements on new simulated samples, and times exact Jaccard against verified MinHash/LSH.
-
-```bash
-python scripts/run_m5.py
-```
-
-The record is `docs/m5_final_validation.md`. Figures and tables are written under `outputs/m5/`.
-
-The integrated study asks whether verified MinHash/LSH can replace all-pairs Jaccard inside the Louvain and balanced-greedy pipeline. M3 still builds its published communities from exact Jaccard. This run does not rewrite those files.
-
-```bash
-python scripts/run_integrated_study.py
-```
-
-The record is `docs/integrated_study.md`. Figures and tables are written under `outputs/integrated/`.
-
-M5.6 does not redraw the OD pairs or move the counters. It builds alternative paths by perturbing directed edge costs, keeps a path only when its original-length detour is within 15% or 30%, and rescores the saved greedy and lambda-0.25 placements.
-
-```bash
-python scripts/run_route_choice_study.py
-```
-
-The record is `docs/route_choice_robustness.md`. Figures and tables are written under `outputs/route_choice/`.
-
-M5.7 times streaming exact and verified LSH on nested uniform samples of 500, 1,000, 2,000, 5,000, and 10,000 simulated routes. Route generation is excluded from the pipeline times. The run does not overwrite the M1 routes or the integrated-study benchmarks.
-
-```bash
-python scripts/run_scalability_study.py
-```
-
-The record is `docs/scalability_study.md`. Figures and tables are written under `outputs/scalability/`.
-
-## External count check
-
-`scripts/run_external_validation.py` compares the saved M1 routes with Københavns Kommune's published bicycle counts (CC0 Trafiktal file). It asks two questions: whether simulated corridor frequency ranks like observed bicycle AADT at name-matched counting sites, and how much extra held-out modeled-route coverage K additional greedy sites add beyond those sites. Those locations are a recurring counting programme, not a confirmed inventory of permanently installed sensors. Modeled-route coverage is not observed cyclist capture.
-
-```bash
-python scripts/run_external_validation.py
-python scripts/map_standout.py
-```
-
-The method, the data limits, and the executed numbers are in `docs/standout_extension.md`. Run `python scripts/run_m1.py` first. The municipal CSV and the figures stay under gitignored `data/` and `outputs/`. The standout map draws the matched eligible segments on the local basemap and does not request public map tiles. A static copy of the same geometries is `outputs/standout/standout_counters.png`.
-
-The download checks the municipal server's HTTPS certificate. It does not turn verification off. If macOS Python reports `CERTIFICATE_VERIFY_FAILED`, install the `analysis` extra (it includes `certifi`) or run `Install Certificates.command` from the python.org installation, then retry. The live municipal file can change. Exact reproduction uses the local snapshot recorded in `docs/data_sources.md`, SHA-256 `d46f3214ee2a4db9c8ff9a9708934fe6c6fbfb8b0f753aa0dd9ba58981a341ad`.
-
-## Open the maps
-
-After the matching script has run, open the HTML file in a browser. None of these pages request public map tiles.
-
-| Map | Command | File |
-| --- | --- | --- |
-| M1 network | `python scripts/map_m1.py` | `outputs/m1/m1_network.html` |
-| M2 placements | written by `run_m2.py` | `outputs/m2/placements_k10.html` |
-| M3 communities | written by `run_m3.py` | `outputs/m3/communities.html` |
-| M4 placements | written by `run_m4.py` | `outputs/m4/placements_k10.html` |
-| Municipal comparison | `python scripts/map_standout.py` | `outputs/standout/standout_counters.html` |
-
-## Final analysis notebook
-
-The examination notebook is `notebooks/analysis.ipynb`. It runs the coverage, MinHash/LSH, Louvain, MILP, and Shapley functions on small examples, and it reads the Copenhagen results from `notebooks/assets/`. Those tables were exported from the saved studies. The notebook does not rerun them and does not download OpenStreetMap or Trafiktal data.
-
-```bash
 python -m pip install -e '.[analysis,dev]'
+```
+
+### Run the final notebook — recommended for teammates
+
+```bash
 jupyter lab notebooks/analysis.ipynb
 ```
 
-Run every cell from the top. On the machine used to prepare the notebook, execution took about 4 seconds with the local graph and about 3 seconds without it. Allow longer on a slower machine; it should stay well under 3 minutes. A checkout without `data/` and `outputs/` still executes: the map cell explains that the GraphML is absent and continues. Rebuild the assets only when the study outputs are already on disk:
+In Jupyter, choose **Run All Cells**. The notebook combines small live demonstrations of the tested project functions with **21 portable validated result assets** under `notebooks/assets/`. It does **not** regenerate the full Copenhagen experiments or access the network. The optional street-map cell skips gracefully if the large local graph is absent.
+
+Or validate notebook execution from the terminal:
+
+```bash
+python scripts/validate_notebook.py
+```
+
+The notebook and its asset bundle were tested in an extracted, clean Python 3.14 environment without the large local experiment outputs. Python 3.11 has been used for the repository's unit-test CI, **not for a full notebook execution in CI**.
+
+### Run automated checks
+
+```bash
+python -m pytest -q
+ruff check src scripts tests
+python scripts/reproduce.py --mode smoke
+```
+
+The last reported local audit passed **193 tests**. Smoke mode checks the environment and does not download data or rerun experiments. The GitHub Actions workflow runs tests and Ruff with Python 3.11, using the `dev` dependencies.
+
+**Do not run `scripts/validate_results.py` on a fresh clone expecting it to succeed:** it validates the complete **gitignored study-output tree**, which is not bundled. It is intended for a machine with saved experiment artifacts.
+
+## Interactive planner (optional local artifacts)
+
+The [what-if planner](docs/planner.md) can switch between saved methods, budgets, scenarios, municipal additions and selection-frequency heatmaps. It is a standalone HTML viewer over **previously computed results**, not a live optimizer.
+
+On a checkout where the local `data/` and `outputs/` study results already exist:
+
+```bash
+python scripts/map_planner.py
+python -m http.server 8765 --bind 127.0.0.1
+```
+
+Open `http://127.0.0.1:8765/outputs/planner/cyclesense_planner.html`.
+
+The planner **cannot be regenerated from a clean Git clone alone**: its detailed placements and GraphML live under gitignored paths. The academic notebook and report are the portable alternatives. The planner makes no public map-tile requests.
+
+## Repository layout
+
+```text
+cyclesense-cph/
+├── src/cyclesense/          Algorithms, graph utilities, evaluation and plots
+├── scripts/                 Experiment runners, validation and asset export
+├── notebooks/
+│   ├── analysis.ipynb       Final executable research notebook
+│   └── assets/              Small, validated result tables + provenance
+├── report/
+│   ├── report.tex           Editable academic report DRAFT
+│   ├── report.pdf           Compiled draft PDF
+│   └── figures/             Report figures and source records
+├── docs/                    Detailed study protocols, outcomes and limitations
+├── configs/                 Pilot settings, seeds and data integrity manifest
+├── snapshots/               Frozen municipal Trafiktal source CSV (CC0)
+├── tests/                   Unit and integration tests
+├── .github/workflows/       CI checks
+├── pyproject.toml           Installation requirements and tooling
+├── data/                    Processed graph and local inputs (gitignored)
+├── outputs/                 Large experiment outputs and interactive maps (gitignored)
+└── cache/                   Historical OSM PBF and cache (gitignored)
+```
+
+## Reproducibility and data provenance
+
+| Source or artifact | Availability | Important caveat |
+| --- | --- | --- |
+| **Original OSM PBF** | Local `cache/osm/Copenhagen.osm.pbf`; not tracked | The [BBBike Copenhagen URL](https://download.bbbike.org/osm/bbbike/Copenhagen/Copenhagen.osm.pbf) serves a **mutable** extract, not the historical file used here |
+| **Processed routing graph and simulated routes** | Local `data/processed/m1/`; not tracked | Rebuilding the exact published graph requires the recorded PBF bytes or saved GraphML |
+| **Municipal Trafiktal** | Tracked [21 November 2026 snapshot](snapshots/trafiktal-2026-11-21.csv) | Published recurring counting locations, not confirmed installed permanent sensors; CC0 data |
+| **Core notebook result tables** | Tracked `notebooks/assets/` | Exported from saved experiments; provenance and source hashes in [`provenance.json`](notebooks/assets/provenance.json) |
+| **Full figures and experiment tables** | Local `outputs/`; not tracked | The notebook and report contain the selected portable evidence |
+| **Report and source** | Tracked `report/` | Draft pending group review |
+
+The project records the OSM and Trafiktal hashes, versions and workflow steps in [`configs/reproducibility.yaml`](configs/reproducibility.yaml). Full reproduction instructions are in [`docs/reproducibility.md`](docs/reproducibility.md).
+
+To regenerate a **portable notebook asset bundle** from complete saved study outputs, use:
 
 ```bash
 python scripts/export_notebook_assets.py
 python scripts/validate_notebook.py
 ```
 
-`notebooks/assets/provenance.json` records the source path and SHA-256 of each exported file. The interactive planner remains a separate page, `outputs/planner/cyclesense_planner.html`.
+Do not regenerate the assets merely because the full `data/` and `outputs/` trees are missing. Re-running the full pipeline from a freshly downloaded OSM extract can change the underlying network and no longer reproduce the published results. Full reproduction from scratch with the original historical OSM snapshot was not independently certified.
 
-## Final report
+### Important limitations
 
-The course report is `report/report.tex`, with the PDF at `report/report.pdf`. Figures are in `report/figures/`. `python scripts/count_report.py` counts the report text the way the 2026 brief specifies: characters excluding white space, with the contribution appendix reported separately. The official cap is 11,000 characters for a group of four and 12,500 for a group of five. Group member names are still a placeholder on the title page.
+- Simulated origin–destination pairs and shortest paths are **not observed cycling trips**. The route-choice detours are also simulated.
+- The study rectangle clips routes and misses activity outside its boundary. In particular, Dronning Louises Bro has published high bicycle counts but zero modeled traversal in this pilot.
+- Selection stability and Shapley values describe the model's coverage game; they are not estimates of traffic volume or reasons to install/remove physical counting equipment.
+- OSM tags do not establish ownership, clearance, power supply, permissions or engineering suitability.
+- The municipal AADT observations cover different locations/years and should never be substituted for simulated route coverage.
+- Benchmark times and tracked memory are measurements on the reported machine, not universal hardware performance.
 
-## Principal findings
+## Report handover — tasks for the group
 
-These are the results of the saved runs. The detailed tables are in `docs/`.
+The academic report is a **draft for collaborative editing**: [`report/report.tex`](report/report.tex) and [`report/report.pdf`](report/report.pdf).
 
-- Greedy maximum coverage covers more held-out simulated routes than random, K-Means, or route-frequency placement.
-- MinHash/LSH retrieves nearly the same similar pairs as exact Jaccard and is faster once both operations return the pairs, from 500 to 2000 routes in the measured series. Exact comparison uses less memory.
-- Louvain communities on these routes are fragmented, with many singletons.
-- Community balancing does not consistently raise held-out coverage or robustness. Some higher weights raise calibration-community representation, and one commuter setting covers fewer held-out routes than size-matched shuffles.
-- Published municipal counts do not rank like simulated corridor frequency at the 26 name-matched sites. The counts also show where the simulated routes miss a busy bridge.
-- Five greedy segments added beyond those 26 sites raise held-out modeled-route coverage by about ten percentage points in both scenarios.
-- With the OD pairs and counter IDs held fixed, short simulated detours lower K = 10 coverage by about 7–8 percentage points in the uniform scenario and about 3–4 in the commuter scenario. At K = 20 the drop is about 4–5 points. Greedy usually stays ahead of the lambda-0.25 placement. The wider 30% cap adds little beyond the 15% cap, because most accepted detours are already shorter than 15%.
-- On a nested uniform sample, verified LSH with 32 permutations and 16×2 bands keeps about 99.6% of the exact Jaccard edges from 500 to 10,000 routes and is about eight times faster than streaming exact at 10,000 routes. Streaming exact uses less Python-tracked memory at every size. The ten selected counters still change as the sample grows.
-- A shared greedy set trained on shortest paths and 15% calibration detours does not improve held-out coverage under alternative routes. At K=10 it keeps 9 of the 10 pooled shortest-path counters. On fresh seeds it is about one point lower on uniform alternatives and about one point higher on commuter alternatives. Its shortest-path coverage is lower, especially for uniform routes (69.6% against 72.8% for the uniform greedy). Details are in `docs/robust_placement.md`.
-- Requiring a mapped cycling facility keeps 381 of 1,047 candidates and lowers held-out coverage by a few points. Limiting the search to the 107 dedicated cycleways moves the counters and cuts held-out coverage by about 30–47 points. Details are in `docs/infrastructure_constraints.md`.
-- On the calibration routes, Knippelsbro has the largest unique modeled-route contribution (about 7.4–7.6 points). Several traversed sites have zero unique contribution because other municipal segments cover the same simulated routes. That is shared modeled coverage, not a reason to remove a counting site. Details are in `docs/municipal_redundancy.md`.
+**The computational work is complete; the group owns the final report revision and submission.** Before uploading, please:
 
-## Limitations
+1. **Insert all group members' full names** in the LaTeX author field and replace the individual-contributions placeholder with accurate descriptions.
+2. **Review the argument and figures.** The notebook is the main reference for the validated numerical results; the detailed method notes are in `docs/`. Avoid turning the report into a chronology of experimental milestones.
+3. **Recompile and recount the *rendered* PDF.** The 2026 brief specifies 11,000 non-whitespace characters for four members or 12,500 for five. In the last audit, the draft's **rendered** report plus contribution appendix counted approximately **10,937 characters** against the conservative 11,000 threshold. That leaves only **63 characters before adding names/contributions**. Shorten wording where necessary. `python scripts/count_report.py` is a **LaTeX-source proxy that undercounts rendered figure labels**; do not rely on it alone.
+4. **Inspect every PDF page** for readable legends, mathematical notation, citations and uncut tables. The current report has six pages and five figures.
+5. **Build the final submission archive** and check that it contains the final PDF, notebook, assets, source code and required instructions. The previous `submission/` ZIP was a draft, not a final hand-in.
+6. **Submit through DTU Learn**, according to the official project brief, **by 4 December 2026 at 23:59**. A GitHub commit by itself is not a DTU Learn submission.
 
-- Simulated routes are generated shortest paths, not observed journeys. The M5.6 detours are another simulation, not estimated rider choices. Ten thousand simulated routes on this network still reuse about 1,600 physical segments.
-- Modeled-route coverage is not the share of cyclists a counter would record.
-- Municipal counting locations are a recurring count programme, not a confirmed list of permanent sensors.
-- Proposed segments are model selections, not approved installation sites.
-- Calibration numbers, including a popup's incremental gain, are not held-out evidence.
-- The municipal WFS file can change. The published comparison uses `snapshots/trafiktal-2026-11-21.csv`.
-- The BBBike Copenhagen URL is a current extract. A new download may not match the recorded PBF hash.
-- The study rectangle cuts off routes at its boundary, so a busy street on the edge can have a high published count and few simulated traversals.
-- A missing cycleway tag is not evidence that cycling infrastructure is absent. The infrastructure policies use only tags stored on the saved graph.
+**Report-writing recommendation:** Lead with the certified near-optimality of greedy; explain why LSH/Louvain and robustness experiments remain computationally interesting; close with the limited external validity of simulated-route placement. Keep negative results visible.
 
-## Milestones
+## Data attribution and academic references
 
-- [ ] **M0**: GitHub repository, Cursor workspace and passing local tests
-- [x] **M1**: Copenhagen subgraph extraction, topology audit, candidate sites, test routes
-- [x] **M2**: Random/K-Means/route-frequency/greedy baselines and held-out evaluation
-- [x] **M3**: MinHash–LSH similarity graph and Louvain route communities
-- [x] **M4**: Community-balanced placement, scenario-shift check, and shuffled-label ablation
-- [x] **M5**: Final validation of the saved placements, without the graded report
-- [x] **M5.6**: Route-choice sensitivity of the saved placements, without the graded report
-- [x] **M5.7**: Scalability of streaming exact and verified LSH on larger simulated samples, without the graded report
-- [x] **M5.8**: Reproducibility freeze: snapshots, smoke check, and ordered rerun
-- [x] **M5.9**: Route-choice-aware placement, with a negative held-out result against the pooled shortest-path control
-- [x] **M5.10**: Exact MILP benchmark of the coverage objective. Greedy matches the optimum at K=5 and K=10; a higher calibration value does not consistently raise held-out coverage
-- [x] **M5.11**: Stability of greedy locations across 30 independent calibration draws. One bridge segment is selected every time; whole K=10 sets are not
-- [x] **M5.12**: Interactive planner over the saved placements. Missing evaluations stay blank
-- [x] **M5.13**: Mapped-infrastructure candidate policies. See `docs/infrastructure_constraints.md`
-- [x] **M5.14**: Attribution of modeled-route coverage across the 26 name-verified counting sites. A zero leave-one-out value is not a removal recommendation
+- **[OpenStreetMap](https://www.openstreetmap.org/copyright)** contributors — mapped streets and network tags (ODbL), obtained via the **[BBBike](https://download.bbbike.org/osm/bbbike/Copenhagen/)** extract.
+- **[Københavns Kommune — Trafiktal](https://www.opendata.dk/city-of-copenhagen/trafiktal)** — published traffic counts (frozen project snapshot, CC0).
+- The report and notebook cite the relevant methodological literature for maximum coverage, MinHash/LSH, Louvain, and related evaluation tools.
 
-## Data management
-
-- `data/` and `outputs/` are ignored by Git. Never commit raw traces, large map extracts, or private datasets.
-- Save extraction dates, OSM attribution, parameters and random seeds.
-- Use distinct training/calibration and evaluation route samples.
-- Do not report synthetic demand assumptions as observed Copenhagen cycling patterns.
-
-See `docs/research_plan.md` for the intended experiments. M1 through M5, the M5.6 route-choice check, and the M5.7 scalability study are implemented. The external count check is an additional comparison against published municipal bicycle AADT. It does not replace the simulated-route results.
+For the reproducibility protocol, assumptions, and full experimental records, use [`docs/reproducibility.md`](docs/reproducibility.md) and the [research notebook](notebooks/analysis.ipynb).
