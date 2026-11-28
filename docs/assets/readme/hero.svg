@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="328" viewBox="0 0 1280 328" role="img" aria-labelledby="title description">
+<title id="title">CycleSense CPH — computational cycling network research</title><desc id="description">Abstract, illustrative cycling-network routes and selected counters; not a geographical map.</desc>
+<defs><linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#08152B"/><stop offset="1" stop-color="#183A61"/></linearGradient><linearGradient id="line" x1="0" x2="1"><stop stop-color="#26D2CA"/><stop offset="1" stop-color="#81C5FF"/></linearGradient><clipPath id="crop"><rect width="1280" height="328" rx="22"/></clipPath></defs>
+<g clip-path="url(#crop)"><rect width="1280" height="328" fill="url(#bg)"/><circle cx="1093" cy="83" r="220" fill="#204C7A" opacity=".27"/><circle cx="1184" cy="318" r="230" fill="#1C6076" opacity=".19"/>
+<g stroke="#BEDAF4" stroke-opacity=".12" stroke-width="1.5" fill="none">
+<path d="M715 10 L800 72 883 46 989 113 1085 39 1260 86"/><path d="M740 105 L846 158 916 101 1040 181 1164 121 1315 205"/><path d="M704 235 L801 197 907 268 1033 232 1121 286 1230 253 1311 311"/>
+<path d="M750 -25 L747 359 M849 -20 L815 343 M939 -10 L957 349 M1030 -10 L1053 351 M1140 -5 L1104 342 M1240 -10 L1256 342"/>
+<path d="M705 60 L1300 60 M711 143 L1320 143 M700 217 L1320 217 M696 296 L1330 296"/></g>
+<path d="M756 236 L826 185 L893 182 L966 116 L1036 182 L1110 121 L1196 164 L1253 92" fill="none" stroke="#1ED0C2" stroke-width="8" opacity=".15" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M756 236 L826 185 L893 182 L966 116 L1036 182 L1110 121 L1196 164 L1253 92" fill="none" stroke="url(#line)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M833 66 L907 105 L966 116 L1009 248 L1117 286 L1200 256" fill="none" stroke="#72A5FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 9" opacity=".72"/>
+<g fill="#071C30" stroke="#B5FFF2" stroke-width="4"><circle cx="826" cy="185" r="9"/><circle cx="966" cy="116" r="9"/><circle cx="1110" cy="121" r="9"/><circle cx="1196" cy="164" r="9"/></g><g stroke="#D8F3FF" stroke-width="2" opacity=".7"><path d="M826 171v28 M812 185h28"/><path d="M966 102v28 M952 116h28"/><path d="M1110 107v28 M1096 121h28"/></g>
+<rect x="55" y="52" width="140" height="29" rx="14.5" fill="#1D4260" stroke="#3B718B"/><text x="125" y="72" text-anchor="middle" fill="#A2F0E7" font-size="12" font-family="Arial, Helvetica, sans-serif" font-weight="700" letter-spacing="1.7">DTU · 02807</text>
+<text x="55" y="156" fill="#FFFFFF" font-size="61" font-weight="750" font-family="Arial, Helvetica, sans-serif" letter-spacing="-2">CycleSense CPH</text>
+<text x="57" y="196" fill="#C5D8ED" font-size="21" font-family="Arial, Helvetica, sans-serif">Simulated-route coverage for bicycle counters in Copenhagen</text>
+<rect x="56" y="230" width="4" height="28" rx="2" fill="#23D0C2"/>
+<text x="72" y="249" fill="#B7D5E9" font-size="15" font-family="Arial, Helvetica, sans-serif" letter-spacing=".6">GRAPHS   /   MINHASH–LSH   /   LOUVAIN   /   OPTIMIZATION</text>
+</g></svg>
