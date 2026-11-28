@@ -1,0 +1,73 @@
+{
+  "primary_threshold": 0.5,
+  "operating_points": {
+    "uniform": {
+      "num_perm": 32,
+      "bands": 16,
+      "rows_per_band": 2,
+      "threshold": 0.5,
+      "recall": 0.9980430528375733,
+      "n_candidates": 5457
+    },
+    "commuter_proxy": {
+      "num_perm": 128,
+      "bands": 32,
+      "rows_per_band": 4,
+      "threshold": 0.5,
+      "recall": 0.9565846599131693,
+      "n_candidates": 1790
+    }
+  },
+  "graph_threshold_0_5": [
+    {
+      "scenario": "uniform",
+      "threshold": 0.5,
+      "n_nodes": 500,
+      "n_edges": 511,
+      "density": 0.004096192384769539,
+      "n_components": 238,
+      "n_isolates": 178,
+      "weight_min": 0.5,
+      "weight_mean": 0.5972077145521059,
+      "weight_max": 0.9047619047619048
+    },
+    {
+      "scenario": "commuter_proxy",
+      "threshold": 0.5,
+      "n_nodes": 500,
+      "n_edges": 691,
+      "density": 0.005539078156312625,
+      "n_components": 186,
+      "n_isolates": 127,
+      "weight_min": 0.5,
+      "weight_mean": 0.6158535260630378,
+      "weight_max": 0.9615384615384616
+    }
+  ],
+  "communities_threshold_0_5": {
+    "uniform:0.5": {
+      "n_communities": 241,
+      "n_singletons": 178,
+      "largest": 27,
+      "modularity": 0.9131795926661047
+    },
+    "uniform:0.3": {
+      "n_communities": 62,
+      "n_singletons": 43,
+      "largest": 79,
+      "modularity": 0.8105118955319485
+    },
+    "commuter_proxy:0.5": {
+      "n_communities": 191,
+      "n_singletons": 127,
+      "largest": 23,
+      "modularity": 0.933202709234826
+    },
+    "commuter_proxy:0.3": {
+      "n_communities": 55,
+      "n_singletons": 29,
+      "largest": 76,
+      "modularity": 0.8282698345262277
+    }
+  }
+}

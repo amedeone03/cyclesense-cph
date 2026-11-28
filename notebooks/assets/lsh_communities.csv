@@ -1,0 +1,9 @@
+scenario,role,num_perm,bands,rows,graph_edge_recall,n_edges_missed,adjusted_rand_index,exact_communities,approximate_communities,exact_singletons,approximate_singletons
+uniform,primary,32,16,2,0.9980430528375733,1,0.9670562897905883,241,240,178,178
+uniform,high_recall,64,32,2,1.0,0,1.0,241,241,178,178
+uniform,moderate_recall,64,16,4,0.8199608610567515,92,0.824631052929798,241,259,178,193
+uniform,aggressive_reduction,32,4,8,0.10371819960861056,458,0.08827725078828862,241,454,178,421
+commuter_proxy,primary,128,32,4,0.9565846599131693,30,0.8741706998183708,191,193,127,130
+commuter_proxy,high_recall,64,32,2,1.0,0,1.0,191,191,127,127
+commuter_proxy,moderate_recall,64,16,4,0.8350217076700435,114,0.8477802868509408,191,214,127,148
+commuter_proxy,aggressive_reduction,32,4,8,0.12011577424023155,608,0.11195836263931325,191,434,127,392

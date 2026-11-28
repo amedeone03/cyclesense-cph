@@ -1,0 +1,9 @@
+scenario,method,k,condition,n_seeds,coverage_mean,shortest_coverage,loss_percentage_points
+commuter_proxy,pooled_shortest,10,0.15,20,0.6318,0.732,10.019999999999996
+commuter_proxy,pooled_shortest,10,shortest,1,0.732,0.732,0.0
+commuter_proxy,robust_pooled,10,0.15,20,0.6416,0.724,8.240000000000002
+commuter_proxy,robust_pooled,10,shortest,1,0.724,0.724,0.0
+uniform,pooled_shortest,10,0.15,20,0.6406,0.72,7.940000000000003
+uniform,pooled_shortest,10,shortest,1,0.72,0.72,0.0
+uniform,robust_pooled,10,0.15,20,0.6295999999999999,0.696,6.6400000000000015
+uniform,robust_pooled,10,shortest,1,0.696,0.696,0.0

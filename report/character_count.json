@@ -1,0 +1,9 @@
+{
+  "report_characters_excluding_space": 10275,
+  "appendix_characters_excluding_space": 236,
+  "report_plus_appendix": 10511,
+  "limit_group_of_four": 11000,
+  "limit_group_of_five": 12500,
+  "margin_under_group_of_four": 725,
+  "margin_if_appendix_is_included": 489
+}

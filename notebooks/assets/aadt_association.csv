@@ -1,0 +1,7 @@
+scenario,split,metric,n,n_missing_aadt,spearman_rho,permutation_p
+uniform,calibration,traversal_fraction,26,0,0.25698196337733115,0.20939530234882558
+uniform,calibration,unique_fraction,26,0,0.15658477613726388,0.4367816091954023
+uniform,calibration,shapley,26,0,0.23461013683926596,0.24537731134432783
+commuter_proxy,calibration,traversal_fraction,26,0,0.23100628191624054,0.2543728135932034
+commuter_proxy,calibration,unique_fraction,26,0,0.07334902529136249,0.7336331834082959
+commuter_proxy,calibration,shapley,26,0,0.13855631023065065,0.5167416291854073

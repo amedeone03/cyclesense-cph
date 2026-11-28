@@ -1,0 +1,4 @@
+policy,n_permitted,share_of_eligible,reduction_share
+unrestricted,1047,1.0,0.0
+explicit_facility,381,0.3638968481375358,0.6361031518624642
+dedicated,107,0.10219675262655205,0.897803247373448

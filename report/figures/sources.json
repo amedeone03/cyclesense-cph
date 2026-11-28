@@ -1,0 +1,19 @@
+{
+  "fig1_network.pdf": [
+    "data/processed/m1/copenhagen_bike_routing_wgs84.graphml",
+    "outputs/m2/results.csv",
+    "outputs/standout/summary.json"
+  ],
+  "fig2_baselines.pdf": [
+    "notebooks/assets/baselines.csv"
+  ],
+  "fig3_lsh.pdf": [
+    "notebooks/assets/fair_timing.csv"
+  ],
+  "fig4_stability.pdf": [
+    "notebooks/assets/stability.json"
+  ],
+  "fig5_municipal.pdf": [
+    "notebooks/assets/municipal_coverage.csv"
+  ]
+}

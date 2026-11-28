@@ -1,0 +1,86 @@
+{
+  "exported_utc": "2026-11-28T13:10:31+00:00",
+  "note": "Copied or aggregated from saved CycleSense outputs. Numbers were not typed by hand.",
+  "sources": [
+    {
+      "path": "data/processed/m1/summary.json",
+      "sha256": "a808723b664493c21002e616a3ce24ba2330ba45c8686f1da953945903e5b8e5"
+    },
+    {
+      "path": "data/processed/m1/routes.csv",
+      "sha256": "c6158f3c19eca0c30b789b2c252163d73bffc872e079482f1255f6aa11e5ad3b"
+    },
+    {
+      "path": "outputs/m2/results.csv",
+      "sha256": "59178e1732e3b807461aaf5852bef6fc49abd0a261321c6377bda3b1da616b1a"
+    },
+    {
+      "path": "outputs/exact_optimization/greedy_comparison.csv",
+      "sha256": "c274e51c0eb99955b8cb41d400d137532e6e6f9ad229fb922fda482ac626aa56"
+    },
+    {
+      "path": "outputs/scalability/timing_summary.csv",
+      "sha256": "3f75d63e517ef841a5ec5266ba1eda02ed40c6627ea6ad3550a4c80c9b03f806"
+    },
+    {
+      "path": "outputs/scalability/candidate_statistics.csv",
+      "sha256": "428226515c9f8c83e3f71841a5a6ddc25a366ab615582c022ce63e8e474dc3bd"
+    },
+    {
+      "path": "outputs/m3/summary.json",
+      "sha256": "d5f9d708ef13c89ab5baaf7c2b8ff2d4da447910539f5a23240d8f7f5cd32600"
+    },
+    {
+      "path": "outputs/m4/summary.json",
+      "sha256": "ef79649cf544c3ebcaac496933970d8d4079f33dfa48fb79f94dca463329c717"
+    },
+    {
+      "path": "outputs/m4/placements.csv",
+      "sha256": "bba70b71e8a59848c0721bf462d2243d3d4172474638f44c7d031c4bfc50d288"
+    },
+    {
+      "path": "outputs/integrated/summary.json",
+      "sha256": "d527ec67f873bec955e19267d906f7c7433952bdd524e8ae7a8410454f45175c"
+    },
+    {
+      "path": "outputs/route_choice/aggregate_coverage.csv",
+      "sha256": "18ac2556d34b68b0e34c8cb365d873ce33a066df7d8b9f52400c97fb7a94a503"
+    },
+    {
+      "path": "outputs/robust_placement/summary.json",
+      "sha256": "8dff7b181407999806175447ccab17b11237c40ee6ca03ac661f9060be015307"
+    },
+    {
+      "path": "outputs/placement_stability/summary.json",
+      "sha256": "5d12d85365eb9328646b0fb2afb5ff5e97cb9c651f628a0149704440bbd61321"
+    },
+    {
+      "path": "outputs/standout/coverage.csv",
+      "sha256": "fdba74fcd734fa91f1c618bfa6f51a47b2db3d42e270ba308fe229931a8985b3"
+    },
+    {
+      "path": "outputs/infrastructure/coverage_comparison.csv",
+      "sha256": "5d9737e151aa7ab9ca1887202b7ad7e8c7376fab04c3ebbf33ac7fd2263b3d01"
+    },
+    {
+      "path": "outputs/infrastructure/candidate_policy_summary.csv",
+      "sha256": "090aafe165f76865f79340615a7985d141ab9e817abe7ff345ed8dbd2ac84444"
+    },
+    {
+      "path": "outputs/municipal_redundancy/site_contributions.csv",
+      "sha256": "21d25b4f9d5930e80e4cbdf4a895ff97a5b4066f4f3d8dba822673bec4546869"
+    },
+    {
+      "path": "outputs/municipal_redundancy/coverage_multiplicity.csv",
+      "sha256": "43e6308000c0eb672610540bf5d32ce559c3f8400f692dc02e3be35bcd1a8297"
+    },
+    {
+      "path": "outputs/municipal_redundancy/aadt_comparison.csv",
+      "sha256": "beb639c086d833f1f0272979528afab10050a741464a32519eccd0bf8d763a19"
+    },
+    {
+      "path": "outputs/m5/summary.json",
+      "sha256": "2c5a02bb59bb091b3aef78149d36470c922cc391e18f38104f7515e26ba0e219"
+    }
+  ]
+}

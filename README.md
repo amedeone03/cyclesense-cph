@@ -272,6 +272,28 @@ After the matching script has run, open the HTML file in a browser. None of thes
 | M4 placements | written by `run_m4.py` | `outputs/m4/placements_k10.html` |
 | Municipal comparison | `python scripts/map_standout.py` | `outputs/standout/standout_counters.html` |
 
+## Final analysis notebook
+
+The examination notebook is `notebooks/analysis.ipynb`. It runs the coverage, MinHash/LSH, Louvain, MILP, and Shapley functions on small examples, and it reads the Copenhagen results from `notebooks/assets/`. Those tables were exported from the saved studies. The notebook does not rerun them and does not download OpenStreetMap or Trafiktal data.
+
+```bash
+python -m pip install -e '.[analysis,dev]'
+jupyter lab notebooks/analysis.ipynb
+```
+
+Run every cell from the top. On the machine used to prepare the notebook, execution took about 4 seconds with the local graph and about 3 seconds without it. Allow longer on a slower machine; it should stay well under 3 minutes. A checkout without `data/` and `outputs/` still executes: the map cell explains that the GraphML is absent and continues. Rebuild the assets only when the study outputs are already on disk:
+
+```bash
+python scripts/export_notebook_assets.py
+python scripts/validate_notebook.py
+```
+
+`notebooks/assets/provenance.json` records the source path and SHA-256 of each exported file. The interactive planner remains a separate page, `outputs/planner/cyclesense_planner.html`.
+
+## Final report
+
+The course report is `report/report.tex`, with the PDF at `report/report.pdf`. Figures are in `report/figures/`. `python scripts/count_report.py` counts the report text the way the 2026 brief specifies: characters excluding white space, with the contribution appendix reported separately. The official cap is 11,000 characters for a group of four and 12,500 for a group of five. Group member names are still a placeholder on the title page.
+
 ## Principal findings
 
 These are the results of the saved runs. The detailed tables are in `docs/`.

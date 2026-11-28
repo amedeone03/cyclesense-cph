@@ -1,0 +1,43 @@
+{
+  "boundary": {
+    "type": "bbox",
+    "crs": "EPSG:4326",
+    "west": 12.563,
+    "south": 55.6705,
+    "east": 12.5965,
+    "north": 55.688
+  },
+  "extraction_utc": "2026-11-20T21:31:52+00:00",
+  "source": {
+    "provider": "OpenStreetMap",
+    "access": "OSMnx graph_from_pbf on the BBBike Copenhagen extract, then truncate_graph_polygon to the study rectangle",
+    "license": "ODbL",
+    "attribution": "\u00a9 OpenStreetMap contributors",
+    "osmnx_version": "2.2.0"
+  },
+  "projected_crs": "EPSG:32633",
+  "graph": {
+    "routing_nodes": 1157,
+    "routing_edges": 2732,
+    "physical_segments": 1698,
+    "candidates": 1047
+  },
+  "routes": {
+    "calibration": {
+      "uniform": 500,
+      "commuter_proxy": 500
+    },
+    "evaluation": {
+      "uniform": 250,
+      "commuter_proxy": 250
+    },
+    "valid_total": 1500,
+    "seeds": {
+      "calibration": 42,
+      "evaluation": 10049
+    },
+    "scenario_weight_meaning": "one accepted simulated draw, not a bicycle count"
+  },
+  "osm_pbf_sha256": "3661ec97aa60999a911d0824fca03e525f7ec076bbb5c0339f905f0971fa5262",
+  "municipal_snapshot_sha256": "d46f3214ee2a4db9c8ff9a9708934fe6c6fbfb8b0f753aa0dd9ba58981a341ad"
+}

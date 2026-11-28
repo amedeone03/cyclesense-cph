@@ -1,0 +1,5 @@
+scenario,budget_new,held_out_existing_coverage,calibration_existing_coverage,held_out_existing_plus_new,calibration_existing_plus_new,held_out_marginal_gain,n_added
+uniform,5,0.736,0.714,0.836,0.856,0.1,5
+uniform,10,0.736,0.714,0.872,0.906,0.136,10
+commuter_proxy,5,0.724,0.712,0.828,0.894,0.104,5
+commuter_proxy,10,0.724,0.712,0.852,0.946,0.128,10

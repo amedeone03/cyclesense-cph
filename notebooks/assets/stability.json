@@ -1,0 +1,82 @@
+{
+  "headline": "Uniform K=10 selects 61 distinct segments across 30 draws; 1 segment appears in every draw. Mean pairwise Jaccard is 0.27.",
+  "n_replicates": 30,
+  "calibration_routes": 500,
+  "selection_frequency_is_not_cyclist_demand": true,
+  "groups": [
+    {
+      "method": "greedy",
+      "scenario": "uniform",
+      "k": 10,
+      "n_ever_selected": 61,
+      "n_always": 1,
+      "mean_jaccard": 0.2683557379084229,
+      "median_jaccard": 0.25,
+      "p05_jaccard": 0.1111111111111111,
+      "p95_jaccard": 0.42857142857142855,
+      "mean_shared": 4.126436781609195,
+      "calibration_mean": 0.7140000000000001,
+      "heldout_mean": 0.7002666666666666,
+      "heldout_min": 0.656,
+      "heldout_max": 0.736
+    },
+    {
+      "method": "greedy",
+      "scenario": "commuter_proxy",
+      "k": 10,
+      "n_ever_selected": 58,
+      "n_always": 1,
+      "mean_jaccard": 0.2796753655780025,
+      "median_jaccard": 0.25,
+      "p05_jaccard": 0.17647058823529413,
+      "p95_jaccard": 0.42857142857142855,
+      "mean_shared": 4.275862068965517,
+      "calibration_mean": 0.7430666666666668,
+      "heldout_mean": 0.6946666666666667,
+      "heldout_min": 0.664,
+      "heldout_max": 0.72
+    }
+  ],
+  "uniform_k10_top": [
+    {
+      "street_name": "Knippelsbro / B\u00f8rsgade",
+      "physical_edge_id": "pe:2195105934:10169925770:1694109-1111604185",
+      "selection_frequency": 1.0
+    },
+    {
+      "street_name": "Rigsdagsg\u00e5rden",
+      "physical_edge_id": "pe:8089417:257790049:220959793-332214123-332214124-340204030",
+      "selection_frequency": 0.9
+    },
+    {
+      "street_name": "Gammel M\u00f8nt",
+      "physical_edge_id": "pe:8324626:26630844:1932111",
+      "selection_frequency": 0.7333333333333333
+    },
+    {
+      "street_name": "Lille Langebro",
+      "physical_edge_id": "pe:1678026534:6591781196:303625173-701918258-706615522-706615521-706615520",
+      "selection_frequency": 0.5666666666666667
+    },
+    {
+      "street_name": "Gothersgade",
+      "physical_edge_id": "pe:24987042:300094192:36522887",
+      "selection_frequency": 0.5
+    },
+    {
+      "street_name": "Nyhavnsbroen",
+      "physical_edge_id": "pe:7244208:7741059:4375853-1132467849-1132467848",
+      "selection_frequency": 0.4666666666666667
+    },
+    {
+      "street_name": "Lille Kongensgade",
+      "physical_edge_id": "pe:8538468:13040511698:145110209-268612401",
+      "selection_frequency": 0.4
+    },
+    {
+      "street_name": "S\u00f8lvgade",
+      "physical_edge_id": "pe:2683325890:6496142666:234470016",
+      "selection_frequency": 0.36666666666666664
+    }
+  ]
+}

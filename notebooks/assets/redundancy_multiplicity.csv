@@ -1,0 +1,17 @@
+scenario,split,bucket,n_routes,share,coverage,n_routes_total
+uniform,calibration,0,143,0.286,0.714,500
+uniform,calibration,1,192,0.384,0.714,500
+uniform,calibration,2,116,0.232,0.714,500
+uniform,calibration,3+,49,0.098,0.714,500
+uniform,evaluation,0,66,0.264,0.736,250
+uniform,evaluation,1,108,0.432,0.736,250
+uniform,evaluation,2,58,0.232,0.736,250
+uniform,evaluation,3+,18,0.072,0.736,250
+commuter_proxy,calibration,0,144,0.288,0.712,500
+commuter_proxy,calibration,1,209,0.418,0.712,500
+commuter_proxy,calibration,2,110,0.22,0.712,500
+commuter_proxy,calibration,3+,37,0.074,0.712,500
+commuter_proxy,evaluation,0,69,0.276,0.724,250
+commuter_proxy,evaluation,1,101,0.404,0.724,250
+commuter_proxy,evaluation,2,62,0.248,0.724,250
+commuter_proxy,evaluation,3+,18,0.072,0.724,250
