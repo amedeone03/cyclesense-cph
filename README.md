@@ -68,7 +68,7 @@ flowchart TD
 
 ### 1 · Counter placement as maximum coverage
 
-Let `C` be the eligible physical street segments and `R` the simulated calibration routes. A proposed set `S \subseteq C` contains at most `K` counter locations. If `E(r)` denotes the physical segments traversed by route `r`, we maximize
+Let `C` be the eligible physical street segments and `R` the simulated calibration routes. A proposed set `S ⊆ C` contains at most `K` counter locations. If `E(r)` denotes the physical segments traversed by route `r`, we maximize
 
 $$
 \max_{S\subseteq C,\;|S|\le K}
@@ -125,17 +125,17 @@ At `K=10`, uniform greedy achieves **72.8%** held-out coverage, compared with **
 
 *Measured nested samples of 500–10,000 simulated routes. The 10,000-route streaming-exact timing is a **single run**; verified-LSH timing is the median of three. Memory is **peak Python-tracked allocations (tracemalloc)**, not process RSS.*
 
-At 10,000 routes, the verified LSH pipeline took **10.28 seconds** versus **85.29 seconds** for streaming exact Jaccard (approximately **8.3× faster**). Its candidate search avoids most of the roughly 50 million possible pairs, but **streaming exact uses less Python-tracked memory**. LSH approximation also changes some Louvain partitions and sometimes counter sets, so speed must be evaluated alongside recall and downstream effects.
+At 10,000 routes, the verified LSH pipeline took **10.28 seconds** versus **85.29 seconds** for streaming exact Jaccard (approximately **8.3× faster**). Its candidate search avoids most of the roughly 50 million possible pairs, but **streaming exact uses less Python-tracked memory**. For the primary uniform configuration, verified LSH recovers 510 of 511 exact similarity-graph edges (99.8% recall). The resulting Louvain partition has an adjusted Rand index of approximately 0.967 relative to the exact partition. More aggressive LSH settings can produce worse community agreement. Graph-edge recall is the share of exact similarity edges retrieved; it is not a general guarantee of coverage or of the selected counters.
 
 ### Communities and robustness reveal trade-offs
 
 | Study | Finding |
 | --- | --- |
-| **Louvain-balanced placement** | At uniform `K=10`, `\lambda=0.25` scores **72.4%** held-out coverage versus **72.8%** for ordinary greedy; commuter proxy is **66.8%** versus **69.2%**. Community balancing does **not** consistently improve generalization. |
-| **Alternative route choices** | Uniform greedy `K=10` coverage decreases from **72.8%** on the saved shortest paths to **65.7%** under the 15% detour experiment. |
+| **Louvain-balanced placement** | At uniform `K=10`, λ = 0.25 scores **72.4%** held-out coverage versus **72.8%** for ordinary greedy; commuter proxy is **66.8%** versus **69.2%**. Community balancing does **not** consistently improve generalization. |
+| **Alternative route choices** | The 15% detour experiment keeps the saved uniform `K=10` counters fixed and scores them on alternative simulated paths. They were not refitted. Coverage decreases from **72.8%** on the saved shortest paths to **65.7%**. |
 | **30 independent calibration draws** | Only the **Knippelsbro / Børsgade** physical segment is selected in every uniform `K=10` draw. The mean pairwise selected-set Jaccard similarity is **0.27**. |
 | **Route-choice-aware training** | Training on simulated detours does not consistently improve held-out coverage over a fair pooled-shortest-path baseline. |
-| **Mapped infrastructure filters** | At uniform `K=10`, restricting to tagged facilities reduces coverage to **68.4%**; dedicated-cycleway-only candidates give **30.0%**. These are hypothetical OSM-tag filters, **not installation rules**. |
+| **Mapped infrastructure filters** | At uniform `K=10`, restricting to explicitly mapped cycling facilities (381 of the 1,047 candidate segments) reduces coverage to **68.4%**; dedicated-cycleway-only candidates give **30.0%**. These are hypothetical OSM-tag filters, **not installation rules**. |
 
 ### Published municipal sites: useful benchmark, limited validation
 
@@ -147,7 +147,7 @@ The project matches **26** recurring bicycle counting locations from Københavns
 | 26 locations + 5 greedy additions | **83.6%** |
 | 26 locations + 10 greedy additions | **87.2%** |
 
-The modeled ranking of route traversal versus observed bicycle AADT has a weak Spearman association (approximately **`\rho=0.26`**). Notably, **Dronning Louises Bro** has a high published bicycle count but zero modeled traversal within the clipped pilot. The improvement from proposed additions is therefore a **simulation result**, not a forecast of additional cyclists recorded.
+The modeled ranking of route traversal versus observed bicycle AADT has a weak Spearman association (approximately **ρ ≈ 0.26**). Notably, **Dronning Louises Bro** has a high published bicycle count but zero modeled traversal within the clipped pilot. The improvement from proposed additions is therefore a **simulation result**, not a forecast of additional cyclists recorded.
 
 A separate Shapley analysis attributes each simulated covered route equally across the municipal sites it traverses. This distinguishes **unique coverage**, **shared modeled coverage**, and **direct traversal**; it does not determine whether an actual municipal counting site is redundant.
 
